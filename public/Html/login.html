@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Time Capsule</title>
+    <link rel="stylesheet" href="../stylesheets/login.css">
+</head>
+<body>
+<div class="container">
+    <div class="left-panel">
+        <img src="../images/timecapsule.png" alt="Time Capsule Illustration">
+        <h1>Welcome to Time Capsule</h1>
+        <p>Store your memories and retrieve them in the future!</p>
+    </div>
+    <div class="right-panel">
+        <h2>Log in</h2>
+        <form action="/login" method="POST">
+            <label for="email">Email or Username</label>
+            <input type="text" id="email" name="email" placeholder="Enter your email" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+            <div class="remember-me">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">Keep me logged in</label>
+            </div>
+
+            <button type="submit">Log in now</button>
+
+            <p><a href="#">Forgot your password?</a></p>
+        </form>
+
+        <div class="social-login">
+            <p>Or sign in with</p>
+            <button>Google</button>
+            <button>Facebook</button>
+            <button>Twitter</button>
+        </div>
+
+        <p>Not a member yet? <a href="/signup">Register now</a></p>
+    </div>
+</div>
+</body>
+</html>
