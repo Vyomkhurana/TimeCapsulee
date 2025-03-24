@@ -21,7 +21,7 @@
     "passport-local": "^1.0.0",
     "pug": "^3.0.3"
   },
-  "main": "app.js",
+  "main": "users.js",
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -14,7 +14,7 @@
     </div>
     <div class="right-panel">
         <h1>Create Your Account</h1>
-        <form action="/signup" method="POST">
+        <form action="/users/signup" method="POST">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" placeholder="Choose a username" required>
 
@@ -27,8 +27,10 @@
             <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
 
+            <!-- Hidden input ensures 'false' is sent if checkbox is not checked -->
             <div class="terms">
-                <input type="checkbox" id="terms" name="terms" required>
+                <input type="hidden" name="terms" value="false">
+                <input type="checkbox" id="terms" name="terms" value="true" required>
                 <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
             </div>
 
