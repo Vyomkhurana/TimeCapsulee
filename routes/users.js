@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const SignupController = require('../Controllers/Signup');
+const AuthController = require('../Controllers/Auth'); // Updated reference
 
-router.post('/signup', SignupController.signup);
+router.post('/signup', AuthController.signup); // Ensure this matches function name inside Auth.js
 
 module.exports = router;
