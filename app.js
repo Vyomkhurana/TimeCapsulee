@@ -28,6 +28,11 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 // Serve Static HTML Pages (Ensure the path is correct)
+app.get('/home', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'home.html'));
+});
+
+
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'login.html'));
 });
