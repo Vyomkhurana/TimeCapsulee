@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -7,7 +6,10 @@
 }
 
 body {
-    background-color: #F6F8D5;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Navigation */
@@ -17,65 +19,67 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .logo {
-    font-size: 1.5rem;
-    font-weight: 700;
     color: white;
     text-decoration: none;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
 }
 
 .nav-links a {
     color: white;
     text-decoration: none;
-    margin-left: 2rem;
     font-weight: 500;
+    transition: opacity 0.3s ease;
+}
+
+.nav-links a:hover {
+    opacity: 0.8;
 }
 
 /* Hero Section */
-.hero {
-    background: linear-gradient(45deg, #4F959D, #98D2C0);
-    padding: 8rem 5%;
-    text-align: center;
-    color: #2c3e50;
+.signup-container {
+    padding: 4rem 1rem;
+    background: linear-gradient(135deg, #205781, #4F959D);
+    color: white;
+    min-height: calc(100vh - 116px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.hero h1 {
-    font-size: 3.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.hero p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    color: #34495e;
-}
-
-/* Form Section */
-.form-container {
-    max-width: 600px;
+.signup-content {
+    max-width: 500px;
+    width: 100%;
     margin: 0 auto;
-    padding: 3rem;
-    background-color: white;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    margin-top: -5rem;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.form-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+.signup-content h1 {
+    color: #205781;
+    font-size: 1.75rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
 }
 
-.form-title {
+.signup-content p {
+    color: #666;
     text-align: center;
     margin-bottom: 2rem;
-    color: #2c3e50;
+    font-size: 1rem;
 }
 
+/* Form Styling */
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -83,68 +87,94 @@ nav {
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #34495e;
+    color: #333;
     font-weight: 500;
 }
 
-.form-group input {
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
     width: 100%;
-    padding: 0.8rem;
-    border: 2px solid #ddd;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
     border-radius: 5px;
-    font-family: inherit;
-    transition: all 0.3s ease;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
 }
 
-.form-group input:focus {
+.form-group input[type="text"]:focus,
+.form-group input[type="email"]:focus,
+.form-group input[type="password"]:focus {
     outline: none;
-    animation: shadowPulse 1s infinite;
+    border-color: #4F959D;
 }
 
-@keyframes shadowPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(79, 149, 157, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 5px rgba(79, 149, 157, 0.4);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(79, 149, 157, 0.4);
-    }
-}
-
-.form-buttons {
+/* Checkbox styling */
+.checkbox-group {
     display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 0.2rem;
+    cursor: pointer;
+    accent-color: #4F959D;
+}
+
+.checkbox-group label {
+    margin: 0;
+    display: inline;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.4;
+}
+
+.checkbox-group a {
+    color: #4F959D;
+    text-decoration: none;
+}
+
+.checkbox-group a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons */
 .cta-button {
+    width: 100%;
     background-color: #4F959D;
     color: white;
-    padding: 1rem 2rem;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: transform 0.3s ease;
     border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 1rem;
 }
 
 .cta-button:hover {
-    transform: translateY(-3px);
+    background-color: #205781;
 }
 
 .secondary-button {
+    display: block;
+    width: 100%;
     background-color: transparent;
     color: #4F959D;
-    padding: 1rem 2rem;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 500;
     border: 1px solid #4F959D;
-    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
 .secondary-button:hover {
@@ -152,21 +182,24 @@ nav {
     color: white;
 }
 
-/* Social Login Section */
-.social-login {
-    margin-top: 2rem;
+/* Social Signup */
+.social-signup {
     text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
 }
 
-.social-login p {
-    margin-bottom: 1rem;
+.social-signup h3 {
     color: #666;
+    font-size: 1rem;
+    margin-bottom: 1rem;
 }
 
 .social-buttons {
     display: flex;
     justify-content: center;
     gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .social-button {
@@ -174,46 +207,74 @@ nav {
     height: 40px;
     border-radius: 50%;
     border: none;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.social-button.google {
-    background-color: #4285F4;
-}
-
-.social-button.facebook {
-    background-color: #1877F2;
-}
-
-.social-button.twitter {
-    background-color: #1DA1F2;
+    cursor: pointer;
+    transition: transform 0.3s ease;
 }
 
 .social-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.google {
+    background-color: #DB4437;
+}
+
+.facebook {
+    background-color: #4267B2;
+}
+
+.twitter {
+    background-color: #1DA1F2;
+}
+
+.social-button i {
+    color: white;
+    font-size: 1.2rem;
 }
 
 /* Footer */
 footer {
     background-color: #205781;
     color: white;
-    padding: 2rem 5%;
     text-align: center;
-    margin-top: 3rem;
+    padding: 1rem;
+    margin-top: auto;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
-    .hero h1 {
-        font-size: 2.5rem;
+    .signup-content {
+        margin: 1rem;
+        padding: 1.5rem;
     }
 
-    .form-container {
-        margin-top: 0;
-        padding: 2rem;
+    .signup-container {
+        padding: 1rem;
+    }
+
+    .signup-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .signup-content p {
+        font-size: 0.9rem;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+        padding: 0.7rem;
+    }
+
+    .checkbox-group label {
+        font-size: 0.9rem;
+    }
+
+    .cta-button,
+    .secondary-button {
+        padding: 0.7rem 1rem;
     }
 }

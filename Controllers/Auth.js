@@ -3,26 +3,41 @@ const bcrypt = require('bcryptjs');
 
 const signup = async (req, res) => {
     try {
-        const { username, email, password, confirm_password, terms } = req.body;
+        const { username, email, password, confirmPassword, terms } = req.body;
 
-        // Validation
-        if (!username || !email || !password || !confirm_password) {
-            return res.status(400).json({ error: 'All fields are required' });
+        // Debug logging
+        console.log('Signup request:', {
+            username: username || '[missing]',
+            email: email || '[missing]',
+            hasPassword: !!password,
+            hasConfirmPassword: !!confirmPassword,
+            terms: !!terms
+        });
+
+        // Basic validation
+        if (!username || !email || !password || !confirmPassword || !terms) {
+            return res.status(400).json({
+                error: 'All fields are required',
+                missing: {
+                    username: !username,
+                    email: !email,
+                    password: !password,
+                    confirmPassword: !confirmPassword,
+                    terms: !terms
+                }
+            });
         }
 
-        if (!terms) {
-            return res.status(400).json({ error: 'You must accept the terms and conditions' });
-        }
-
-        if (password !== confirm_password) {
+        // Password match validation
+        if (password !== confirmPassword) {
             return res.status(400).json({ error: 'Passwords do not match' });
         }
 
-        // Check existing user
+        // Check if user exists
         const existingUser = await User.findOne({
             $or: [
-                { username: username.toLowerCase() },
-                { email: email.toLowerCase() }
+                { email: email.toLowerCase() },
+                { username: username.toLowerCase() }
             ]
         });
 
@@ -30,23 +45,32 @@ const signup = async (req, res) => {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
 
-        // Create new user
-        const newUser = new User({
+        // Create user
+        const user = await User.create({
             username: username.toLowerCase(),
             email: email.toLowerCase(),
             password,
-            terms: true
+            terms
         });
 
-        await newUser.save();
         res.status(201).json({
-            message: 'User created successfully',
-            user: { username, email }
+            success: true,
+            message: 'User created successfully'
         });
 
     } catch (err) {
         console.error('Signup error:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(e => e.message);
+            return res.status(400).json({ error: messages[0] });
+        }
+
+        if (err.code === 11000) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 
@@ -58,23 +82,25 @@ const login = async (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
+        // Find user and include password field
         const user = await User.findOne({
             $or: [
                 { email: email.toLowerCase() },
                 { username: email.toLowerCase() }
             ]
-        });
+        }).select('+password');
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const isValid = await user.comparePassword(password);
+        const isValid = await user.verifyPassword(password);
         if (!isValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         res.status(200).json({
+            success: true,
             message: 'Login successful',
             user: {
                 username: user.username,
@@ -84,7 +110,7 @@ const login = async (req, res) => {
 
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 

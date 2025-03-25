@@ -11,7 +11,7 @@
 <body>
 <!-- Navigation -->
 <nav>
-    <a href="#" class="logo">Time Capsule</a>
+    <a href="/" class="logo">Time Capsule</a>
     <div class="nav-links">
         <a href="/">Home</a>
         <a href="/features">Features</a>
@@ -28,7 +28,7 @@
 <!-- Form Section -->
 <section class="form-container">
     <h2 class="form-title">Login</h2>
-    <form action="/users/login" method="POST">
+    <form id="loginForm">
         <div class="form-group">
             <label for="email">Email or Username</label>
             <input type="text" id="email" name="email" required placeholder="Enter your email or username">
@@ -49,33 +49,32 @@
     <div class="social-login">
         <h3>Or sign in with</h3>
         <div class="social-buttons">
-            <button class="social-button google-login">
+            <button type="button" class="social-button google-login">
                 <i class="fab fa-google"></i>
             </button>
-            <button class="social-button facebook-login">
+            <button type="button" class="social-button facebook-login">
                 <i class="fab fa-facebook-f"></i>
             </button>
-            <button class="social-button twitter-login">
+            <button type="button" class="social-button twitter-login">
                 <i class="fab fa-twitter"></i>
             </button>
         </div>
-        <p class="forgot-password"><a href="#">Forgot your password?</a></p>
+        <p class="forgot-password"><a href="/forgot-password">Forgot your password?</a></p>
     </div>
 </section>
 
 <!-- Footer -->
 <footer>
-    <p>&copy; 2023 Time Capsule. All rights reserved.</p>
+    <p>&copy; 2025 Time Capsule. All rights reserved.</p>
 </footer>
 
 <script>
-    document.querySelector('form').addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const formData = new FormData(e.target);
-        const data = {
-            email: formData.get('email'),
-            password: formData.get('password')
+        const formData = {
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
         };
 
         try {
@@ -84,18 +83,34 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(formData)
             });
 
-            const result = await response.json();
             if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
                 window.location.href = '/dashboard';
             } else {
-                alert(result.error);
+                const error = await response.json();
+                alert(error.message || 'Login failed. Please try again.');
             }
-        } catch (err) {
-            alert('Login failed. Please try again.');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again later.');
         }
+    });
+
+    // Social login handlers
+    document.querySelector('.google-login').addEventListener('click', () => {
+        alert('Google login will be implemented here');
+    });
+
+    document.querySelector('.facebook-login').addEventListener('click', () => {
+        alert('Facebook login will be implemented here');
+    });
+
+    document.querySelector('.twitter-login').addEventListener('click', () => {
+        alert('Twitter login will be implemented here');
     });
 </script>
 </body>
