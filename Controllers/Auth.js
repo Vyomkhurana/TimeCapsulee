@@ -6,8 +6,12 @@ const signup = async (req, res) => {
         const { username, email, password, confirm_password, terms } = req.body;
 
         // Validation
-        if (!username || !email || !password || !confirm_password || terms === undefined) {
+        if (!username || !email || !password || !confirm_password) {
             return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        if (!terms) {
+            return res.status(400).json({ error: 'You must accept the terms and conditions' });
         }
 
         if (password !== confirm_password) {
@@ -26,12 +30,12 @@ const signup = async (req, res) => {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
 
-        // Create new user - let the schema middleware handle password hashing
+        // Create new user
         const newUser = new User({
             username: username.toLowerCase(),
             email: email.toLowerCase(),
-            password: password, // The schema will hash this
-            terms: terms === true || terms === "true"
+            password,
+            terms: true
         });
 
         await newUser.save();
@@ -50,12 +54,10 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validation
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email/Username and password are required' });
+            return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        // Find user
         const user = await User.findOne({
             $or: [
                 { email: email.toLowerCase() },
@@ -64,19 +66,14 @@ const login = async (req, res) => {
         });
 
         if (!user) {
-            console.log('User not found:', email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Use the schema method to compare passwords
         const isValid = await user.comparePassword(password);
-
         if (!isValid) {
-            console.log('Invalid password for user:', user.username);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Success
         res.status(200).json({
             message: 'Login successful',
             user: {

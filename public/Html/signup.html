@@ -27,10 +27,8 @@
             <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
 
-            <!-- Hidden input ensures 'false' is sent if checkbox is not checked -->
             <div class="terms">
-                <input type="hidden" name="terms" value="false">
-                <input type="checkbox" id="terms" name="terms" value="true" required>
+                <input type="checkbox" id="terms" name="terms" required>
                 <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
             </div>
 
@@ -46,5 +44,38 @@
         <p>Already have an account? <a href="/login">Log in</a></p>
     </div>
 </div>
+<script>
+    document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = {
+            username: formData.get('username'),
+            email: formData.get('email'),
+            password: formData.get('password'),
+            confirm_password: formData.get('confirm_password'),
+            terms: formData.get('terms') === 'on'
+        };
+
+        try {
+            const response = await fetch('/users/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                window.location.href = '/login';
+            } else {
+                alert(result.error);
+            }
+        } catch (err) {
+            alert('Signup failed. Please try again.');
+        }
+    });
+</script>
 </body>
 </html>
