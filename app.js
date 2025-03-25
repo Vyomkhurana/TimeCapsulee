@@ -14,24 +14,27 @@ const app = express();
 
 // Enable CORS for all routes
 app.use(cors());
-app.options('*', cors()); // Handle preflight requests
+app.options('*', cors());
 
 // Middleware
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from "public"
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
-app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// Serve Static HTML Pages (Ensure the path is correct)
-app.get('/home', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'Html', 'home.html'));
+// Serve Static HTML Pages
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'index.html'));
 });
 
+// Redirect /index to root
+app.get('/index', (req, res) => {
+  res.redirect('/');
+});
 
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'login.html'));
@@ -40,6 +43,53 @@ app.get('/login', (req, res) => {
 app.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'signup.html'));
 });
+
+app.get('/features', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'features.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'dashboard.html'));
+});
+
+app.get('/how-it-works', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'how-it-works.html'));
+});
+
+app.get('/pricing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'pricing.html'));
+});
+
+app.get('/contact', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'contact.html'));
+});
+
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'about.html'));
+});
+
+app.get('/mission', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'mission.html'));
+});
+
+app.get('/team', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'team.html'));
+});
+
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'privacy.html'));
+});
+
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'terms.html'));
+});
+
+app.get('/cookies', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'cookies.html'));
+});
+
+// API routes
+app.use('/', indexRouter);
 
 // Handle 404 Errors
 app.use((req, res, next) => {
@@ -53,17 +103,19 @@ app.use((err, req, res, next) => {
 
   res.status(err.status || 500);
 
-  // Check if error.html exists before serving
   const errorPagePath = path.join(__dirname, 'public', 'Html', 'error.html');
   if (fs.existsSync(errorPagePath)) {
     res.sendFile(errorPagePath);
   } else {
-    res.json({ message: err.message, error: req.app.get('env') === 'development' ? err : {} });
+    res.json({
+      message: err.message,
+      error: req.app.get('env') === 'development' ? err : {}
+    });
   }
 });
 
 // Start Server
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000; // Changed to 3000
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
 module.exports = app;

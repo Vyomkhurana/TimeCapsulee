@@ -1,3 +1,4 @@
+
 * {
     margin: 0;
     padding: 0;
@@ -100,6 +101,17 @@ nav {
     animation: shadowPulse 1s infinite;
 }
 
+@keyframes shadowPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(79, 149, 157, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(79, 149, 157, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 149, 157, 0.4);
+    }
+}
 
 .form-buttons {
     display: flex;

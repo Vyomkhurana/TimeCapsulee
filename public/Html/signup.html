@@ -3,78 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Time Capsule</title>
-    <link rel="stylesheet" href="../stylesheets/login.css">
+    <title>Time Capsule - Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../stylesheets/signup.css">
+
 </head>
 <body>
-<div class="container">
-    <div class="left-panel">
-        <h2>Welcome to Time Capsule</h2>
-        <p>Secure your memories and retrieve them in the future.</p>
+<!-- Navigation -->
+<nav>
+    <a href="#" class="logo">Time Capsule</a>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="features.html">Features</a>
+        <a href="login.html">Login</a>
     </div>
-    <div class="right-panel">
-        <h1>Create Your Account</h1>
-        <form action="/users/signup" method="POST">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="Choose a username" required>
+</nav>
 
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+<!-- Hero Section -->
+<section class="hero">
+    <h1>Create Your Account</h1>
+    <p>Join Time Capsule and start preserving your memories for the future</p>
+</section>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Create a password" required>
-
-            <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
-
-            <div class="terms">
-                <input type="checkbox" id="terms" name="terms" required>
-                <label for="terms">I agree to the <a href="#">Terms & Conditions</a></label>
-            </div>
-
-            <button type="submit">Sign Up</button>
-        </form>
-
-        <div class="social-login">
-            <p>Or sign up with:</p>
-            <button class="google-btn">Google</button>
-            <button class="facebook-btn">Facebook</button>
+<!-- Form Section -->
+<section class="form-container">
+    <h2 class="form-title">Sign Up</h2>
+    <form id="signup-form">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" required>
         </div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" required>
+        </div>
+        <div class="form-buttons">
+            <button type="submit" class="cta-button">Create Account</button>
+            <a href="login.html" class="secondary-button">Already have an account?</a>
+        </div>
+    </form>
 
-        <p>Already have an account? <a href="/login">Log in</a></p>
+    <!-- Social Login Section -->
+    <div class="social-login">
+        <p>Or sign up with</p>
+        <div class="social-buttons">
+            <button class="social-button google">
+                <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
+                    <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/>
+                </svg>
+            </button>
+            <button class="social-button facebook">
+                <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
+                    <path d="M12 2.04c-5.523 0-10 4.477-10 10 0 4.013 2.42 7.367 5.854 9.273.52.178.682-.227.682-.483 0-.237-.013-1.09.05-1.396-2.047-.25-4.354-1.047-4.354-4.653 0-1.023.378-1.872 1.078-2.467-.012-.267-.056-1.09.04-2.182 0 0 .672-.207 2.138.789a7.25 7.25 0 0 1 2.186.282c-1.258.686-1.635 1.902-1.635 3.104 0 2.237.89 4.136 2.182 5.096a4.632 4.632 0 0 1 1.076-.072c1.416-1.416 3.547-2.484 6.102-2.484 7.25 0 11 4.477 11-10 0-1.516-.428-2.846-1.17-3.86.08-.273.04-1.492-.09-2.087z"/>
+                </svg>
+            </button>
+            <button class="social-button twitter">
+                <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
+                    <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                </svg>
+            </button>
+        </div>
     </div>
-</div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <p>&copy; 2025 Time Capsule. All rights reserved.</p>
+</footer>
+
 <script>
-    document.querySelector('form').addEventListener('submit', async (e) => {
+    // Add event listener to the form submission
+    document.getElementById('signup-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+
+        // Here you would typically add your signup logic (API call, validation, etc.)
+
+        // Redirect to the login page
+        window.location.href = 'login.html';
+    });
+
+    // Add event listeners for social buttons
+    document.querySelector('.social-button.google').addEventListener('click', function() {
+        // In a real application, you would implement Google OAuth here
+        alert('Google sign up functionality would be implemented here');
+        // window.location.href = 'login.html';
+    });
+
+    document.querySelector('.social-button.facebook').addEventListener('click', function() {
+        // In a real application, you would implement Facebook OAuth here
+        alert('Facebook sign up functionality would be implemented here');
+        // window.location.href = 'login.html';
+    });
+
+    document.querySelector('.social-button.twitter').addEventListener('click', function() {
+        // In a real application, you would implement Twitter OAuth here
+        alert('Twitter sign up functionality would be implemented here');
+        // window.location.href = 'login.html';
+    });
+
+    // Ensure "Already have an account?" link works
+    document.querySelector('.secondary-button').addEventListener('click', function(e) {
         e.preventDefault();
-
-        const formData = new FormData(e.target);
-        const data = {
-            username: formData.get('username'),
-            email: formData.get('email'),
-            password: formData.get('password'),
-            confirm_password: formData.get('confirm_password'),
-            terms: formData.get('terms') === 'on'
-        };
-
-        try {
-            const response = await fetch('/users/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                window.location.href = '/login';
-            } else {
-                alert(result.error);
-            }
-        } catch (err) {
-            alert('Signup failed. Please try again.');
-        }
+        window.location.href = 'login.html';
     });
 </script>
 </body>
