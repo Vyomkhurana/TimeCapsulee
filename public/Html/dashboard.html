@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Capsule Dashboard</title>
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Your custom CSS -->
+    <link rel="stylesheet" href="../stylesheets/dashboard.css">
+    <!-- Font Awesome JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+</head>
+<body>
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>Time Capsule</h2>
+        </div>
+        <nav>
+            <ul>
+                <li class="active"><i class="fas fa-home"></i> <span>Dashboard</span></li>
+                <li><i class="fas fa-capsules"></i> <span>My Capsules</span></li>
+                <li><i class="fas fa-calendar"></i> <span>Schedule</span></li>
+                <li><i class="fas fa-chart-line"></i> <span>Statistics</span></li>
+                <li><i class="fas fa-cog"></i> <span>Settings</span></li>
+            </ul>
+        </nav>
+        <div class="user-profile">
+            <div class="user-avatar">
+                <img src="https://via.placeholder.com/40" alt="User Avatar">
+            </div>
+            <p>User Name</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header>
+            <div class="header-content">
+                <h1>Dashboard</h1>
+                <p>Manage your time capsules and memories</p>
+            </div>
+            <div class="date-display">
+                <span id="current-date"></span>
+            </div>
+        </header>
+
+        <div class="quick-actions">
+            <div class="action-card">
+                <i class="fas fa-plus"></i>
+                <p>Create New Capsule</p>
+            </div>
+            <div class="action-card">
+                <i class="fas fa-calendar-check"></i>
+                <p>Schedule Capsule</p>
+            </div>
+            <div class="action-card">
+                <i class="fas fa-file-import"></i>
+                <p>Import Media</p>
+            </div>
+            <div class="action-card">
+                <i class="fas fa-search"></i>
+                <p>Search Capsules</p>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <i class="fas fa-capsules"></i>
+                <div class="stat-info">
+                    <h3>Total Capsules</h3>
+                    <p>0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="stat-info">
+                    <h3>Scheduled</h3>
+                    <p>0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-envelope"></i>
+                <div class="stat-info">
+                    <h3>Delivered</h3>
+                    <p>0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <div class="stat-info">
+                    <h3>Upcoming</h3>
+                    <p>0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="section-header">
+                <h2>Upcoming Capsules</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="capsule-list">
+                <!-- Capsules will be inserted here by backend -->
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="section-header">
+                <h2>Recently Created</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="capsule-grid">
+                <!-- Recently created capsules will be inserted here by backend -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Capsule Modal -->
+<div class="modal" id="createCapsuleModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New Time Capsule</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form>
+                <div class="form-group">
+                    <label for="capsuleTitle">Capsule Title</label>
+                    <input type="text" id="capsuleTitle" placeholder="Enter title for your capsule">
+                </div>
+                <div class="form-group">
+                    <label for="capsuleMessage">Your Message</label>
+                    <textarea id="capsuleMessage" placeholder="Write your message..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="capsuleDate">Schedule Date</label>
+                    <input type="datetime-local" id="capsuleDate">
+                </div>
+                <div class="form-group files-group">
+                    <label for="capsuleFiles">Add Media</label>
+                    <div class="file-upload">
+                        <input type="file" id="capsuleFiles" multiple>
+                        <label for="capsuleFiles" class="file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Upload files</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="reminder">
+                        Send me a reminder 3 days before delivery
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="submit-btn">Create Capsule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>© 2025 Time Capsule. All rights reserved.</p>
+</footer>
+
+<script>
+    // JavaScript for modal functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Open modal when clicking create button
+        const createButtons = document.querySelectorAll('.action-card:first-child');
+        const modal = document.getElementById('createCapsuleModal');
+        const closeModal = document.querySelector('.close-modal');
+        const cancelBtn = document.querySelector('.cancel-btn');
+
+        createButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.style.display = 'block';
+            });
+        });
+
+        // Close modal when clicking close button or cancel
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Display current date
+        const dateDisplay = document.getElementById('current-date');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateDisplay.textContent = new Date().toLocaleDateString('en-US', options);
+    });
+</script>
+</body>
+</html>
