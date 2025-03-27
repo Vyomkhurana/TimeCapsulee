@@ -6,9 +6,12 @@ const logger = require('morgan');
 const fs = require('fs');
 const mongoose = require('./db'); // MongoDB connection
 const cors = require('cors');
+const capsuleRouter = require('./routes/capsules');
+const { startScheduler } = require('./services/scheduler');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+
 
 const app = express();
 
@@ -23,8 +26,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // Routes
 app.use('/users', usersRouter);
+app.use('/api/capsules', capsuleRouter);
 
 // Serve Static HTML Pages
 app.get('/', (req, res) => {
@@ -96,6 +101,8 @@ app.use((req, res, next) => {
   next(createError(404, 'Page not found'));
 });
 
+
+
 // Error Handler
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
@@ -113,6 +120,8 @@ app.use((err, req, res, next) => {
     });
   }
 });
+
+startScheduler();
 
 // Start Server
 const PORT = process.env.PORT || 4000; // Changed to 3000
