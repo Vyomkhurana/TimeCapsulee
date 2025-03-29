@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Capsules - All Capsules</title>
+    <link rel="stylesheet" href="../stylesheets/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-capsules"></i>
+                <h2>TimeCapsule</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li onclick="window.location.href='dashboard.html'">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="active">
+                        <i class="fas fa-capsules"></i>
+                        <span>All Capsules</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-calendar"></i>
+                        <span>Schedule</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <img src="../images/avatar.png" alt="User Avatar">
+                </div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-email">john@example.com</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header>
+                <div class="header-content">
+                    <h1>All Time Capsules</h1>
+                    <p>View and manage all your time capsules</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search capsules...">
+                    </div>
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="personal">Personal Reflection</option>
+                        <option value="special">Special Occasions</option>
+                        <option value="academic">Academic Growth</option>
+                        <option value="mental">Mental Health</option>
+                        <option value="business">Business Goals</option>
+                        <option value="legacy">Legacy</option>
+                        <option value="social">Social</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status:</label>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="upcoming">Upcoming</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By:</label>
+                    <select id="sortFilter">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="date">Delivery Date</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Capsules Grid -->
+            <div class="capsules-grid" id="allCapsules">
+                <!-- Capsules will be dynamically added here -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn" id="prevPage"><i class="fas fa-chevron-left"></i></button>
+                <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                <button class="page-btn" id="nextPage"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let capsules = [];
+        let currentPage = 1;
+        const itemsPerPage = 12;
+
+        // Fetch capsules when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCapsules();
+            setupFilters();
+            setupPagination();
+        });
+
+        async function fetchCapsules() {
+            try {
+                const response = await fetch('/api/capsules/my-capsules');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch capsules');
+                }
+                const data = await response.json();
+                capsules = data.capsules;
+                updateCapsulesGrid();
+                updateCategoryCounts();
+            } catch (error) {
+                console.error('Error fetching capsules:', error);
+                alert('Failed to load capsules. Please try again.');
+            }
+        }
+
+        function updateCategoryCounts() {
+            const categoryCounts = {};
+            capsules.forEach(capsule => {
+                categoryCounts[capsule.category] = (categoryCounts[capsule.category] || 0) + 1;
+            });
+
+            // Update category counts in the sidebar
+            Object.entries(categoryCounts).forEach(([category, count]) => {
+                const categoryElement = document.querySelector(`.category-item[data-category="${category}"]`);
+                if (categoryElement) {
+                    const countElement = categoryElement.querySelector('.category-count');
+                    if (countElement) {
+                        countElement.textContent = count;
+                    }
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateCapsulesGrid() {
+            const grid = document.getElementById('allCapsules');
+            grid.innerHTML = '';
+
+            // Get filter values
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+
+            // Apply filters
+            let filteredCapsules = [...capsules];
+            
+            if (categoryFilter) {
+                filteredCapsules = filteredCapsules.filter(c => c.category === categoryFilter);
+            }
+            
+            if (statusFilter) {
+                filteredCapsules = filteredCapsules.filter(c => c.status === statusFilter);
+            }
+
+            // Apply sorting
+            switch(sortFilter) {
+                case 'newest':
+                    filteredCapsules.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    break;
+                case 'oldest':
+                    filteredCapsules.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                    break;
+                case 'date':
+                    filteredCapsules.sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate));
+                    break;
+            }
+
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedCapsules = filteredCapsules.slice(startIndex, endIndex);
+            const totalPages = Math.ceil(filteredCapsules.length / itemsPerPage);
+
+            // Update pagination info
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+
+            // Update pagination buttons
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+
+            // Display capsules
+            paginatedCapsules.forEach(capsule => {
+                const capsuleCard = document.createElement('div');
+                capsuleCard.className = 'capsule-card';
+                capsuleCard.innerHTML = `
+                    <div class="capsule-info">
+                        <h3>${capsule.title}</h3>
+                        <p>${capsule.message.substring(0, 100)}...</p>
+                        <div class="capsule-meta">
+                            <span class="capsule-category">${capsule.category}</span>
+                            <span class="capsule-date">
+                                <i class="fas fa-calendar"></i>
+                                ${formatDate(capsule.scheduleDate)}
+                            </span>
+                            <span class="capsule-status ${capsule.status}">
+                                ${capsule.status}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="capsule-actions">
+                        <button class="view-btn" onclick="viewCapsule('${capsule._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="edit-btn" onclick="editCapsule('${capsule._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteCapsule('${capsule._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(capsuleCard);
+            });
+        }
+
+        function setupFilters() {
+            const filters = ['categoryFilter', 'statusFilter', 'sortFilter'];
+            filters.forEach(filterId => {
+                document.getElementById(filterId).addEventListener('change', function() {
+                    currentPage = 1; // Reset to first page when filters change
+                    updateCapsulesGrid();
+                });
+            });
+        }
+
+        function setupPagination() {
+            document.getElementById('prevPage').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    updateCapsulesGrid();
+                }
+            });
+
+            document.getElementById('nextPage').addEventListener('click', function() {
+                const totalPages = Math.ceil(capsules.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    updateCapsulesGrid();
+                }
+            });
+        }
+
+        function viewCapsule(id) {
+            // Implement view functionality
+            console.log('Viewing capsule:', id);
+        }
+
+        function editCapsule(id) {
+            // Implement edit functionality
+            console.log('Editing capsule:', id);
+        }
+
+        function deleteCapsule(id) {
+            if (confirm('Are you sure you want to delete this capsule?')) {
+                capsules = capsules.filter(c => c.id !== id);
+                localStorage.setItem('capsules', JSON.stringify(capsules));
+                updateCapsulesGrid();
+            }
+        }
+    </script>
+</body>
+</html> 

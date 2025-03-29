@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../Controllers/Auth');
 const {
     createCapsule,
     getMyCapsules,
     getCapsule
 } = require('../Controllers/Capsule');
 
-router.post('/create', auth, createCapsule);
-router.get('/my-capsules', auth, getMyCapsules);
-router.get('/:id', auth, getCapsule);
+router.post('/create', createCapsule);
+router.get('/my-capsules', getMyCapsules);
+router.get('/:id', getCapsule);
 
 module.exports = router;

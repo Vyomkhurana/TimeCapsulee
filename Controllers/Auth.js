@@ -86,9 +86,28 @@ const signup = async (req, res) => {
             terms
         });
 
+        // Generate token
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET || 'your_jwt_secret',
+            { expiresIn: '24h' }
+        );
+
+        // Set cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
         res.status(201).json({
             success: true,
-            message: 'User created successfully'
+            message: 'User created successfully',
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email
+            }
         });
 
     } catch (err) {
@@ -146,10 +165,12 @@ const login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000
         });
 
+        // Send user data without sensitive information
         res.status(200).json({
             success: true,
             message: 'Login successful',
             user: {
+                _id: user._id,
                 username: user.username,
                 email: user.email
             }

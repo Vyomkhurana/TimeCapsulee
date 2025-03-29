@@ -10,6 +10,11 @@ const capsuleSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Message is required']
     },
+    category: {
+        type: String,
+        required: [true, 'Category is required'],
+        enum: ['personal', 'special', 'academic', 'mental', 'business', 'legacy', 'social']
+    },
     files: [{
         filename: String,
         path: String,
@@ -28,6 +33,14 @@ const capsuleSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'delivered', 'failed'],
         default: 'pending'
+    },
+    reminder: {
+        type: Boolean,
+        default: false
+    },
+    emailDelivery: {
+        type: Boolean,
+        default: true
     },
     createdAt: {
         type: Date,
