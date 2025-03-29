@@ -31,19 +31,23 @@ const createCapsule = async (req, res) => {
                 return res.status(400).json({ error: err.message });
             }
 
-            const { title, message, scheduleDate } = req.body;
+            const { title, message, scheduleDate, category, reminder, emailDelivery, creator } = req.body;
             const files = req.files?.map(file => ({
                 filename: file.originalname,
-                path: file.path,
+                path: file.path.replace('public', ''), // Make path relative to public directory
                 mimetype: file.mimetype
             }));
 
+            // Create capsule with the actual user ID
             const capsule = await Capsule.create({
                 title,
                 message,
+                category,
                 files: files || [],
                 scheduleDate,
-                creator: req.user._id
+                reminder: reminder === 'true',
+                emailDelivery: emailDelivery === 'true',
+                creator: creator // Use the actual user ID from the request
             });
 
             res.status(201).json({
@@ -60,12 +64,22 @@ const createCapsule = async (req, res) => {
 // Get user's capsules
 const getMyCapsules = async (req, res) => {
     try {
-        const capsules = await Capsule.find({ creator: req.user._id })
+        const userId = req.query.userId;
+        
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        console.log('Fetching capsules for user ID:', userId);
+
+        // Find capsules where creator matches the user ID
+        const capsules = await Capsule.find({ creator: userId })
             .sort({ scheduleDate: 1 });
 
+        console.log('Found capsules:', capsules.length);
         res.json({ capsules });
-    } catch (err) {
-        console.error('Get capsules error:', err);
+    } catch (error) {
+        console.error('Error fetching capsules:', error);
         res.status(500).json({ error: 'Failed to fetch capsules' });
     }
 };

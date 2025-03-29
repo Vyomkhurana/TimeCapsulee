@@ -86,13 +86,20 @@
                 body: JSON.stringify(formData)
             });
 
+            const data = await response.json();
+
             if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify({
+                    _id: data.user._id,
+                    username: data.user.username,
+                    email: data.user.email
+                }));
+                
+                // Redirect to dashboard
                 window.location.href = '/dashboard';
             } else {
-                const error = await response.json();
-                alert(error.message || 'Login failed. Please try again.');
+                alert(data.error || 'Login failed. Please try again.');
             }
         } catch (error) {
             console.error('Error:', error);

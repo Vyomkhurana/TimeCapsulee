@@ -12,7 +12,6 @@ const { startScheduler } = require('./services/scheduler');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
-
 const app = express();
 
 // Enable CORS for all routes
@@ -25,7 +24,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // Routes
 app.use('/users', usersRouter);
@@ -55,6 +53,10 @@ app.get('/features', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'dashboard.html'));
+});
+
+app.get('/capsules-view', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'capsules-view.html'));
 });
 
 app.get('/how-it-works', (req, res) => {
@@ -101,8 +103,6 @@ app.use((req, res, next) => {
   next(createError(404, 'Page not found'));
 });
 
-
-
 // Error Handler
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
@@ -121,10 +121,13 @@ app.use((err, req, res, next) => {
   }
 });
 
+// Start the scheduler
 startScheduler();
 
-// Start Server
-const PORT = process.env.PORT || 4000; // Changed to 3000
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
 module.exports = app;
