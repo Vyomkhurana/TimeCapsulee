@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Capsules - All Capsules</title>
+    <title>My Time Capsules</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../stylesheets/dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -13,36 +13,25 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo">
-                <i class="fas fa-capsules"></i>
-                <h2>TimeCapsule</h2>
+                <i class="fas fa-time-capsule"></i>
+                <h2>Time Capsule</h2>
             </div>
             <nav>
                 <ul>
-                    <li onclick="window.location.href='dashboard.html'">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
-                    </li>
-                    <li class="active">
-                        <i class="fas fa-capsules"></i>
-                        <span>All Capsules</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-calendar"></i>
-                        <span>Schedule</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </li>
+                    <li><a href="/dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+                    <li class="active"><i class="fas fa-capsules"></i> <span>My Capsules</span></li>
+                    <li><i class="fas fa-calendar"></i> <span>Schedule</span></li>
+                    <li><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
+                    <li><i class="fas fa-cog"></i> <span>Settings</span></li>
                 </ul>
             </nav>
             <div class="user-profile">
-                <div class="user-avatar">
-                    <img src="../images/avatar.png" alt="User Avatar">
+                <div class="profile-image">
+                    <i class="fas fa-user-circle"></i>
                 </div>
-                <div class="user-info">
-                    <div class="user-name">John Doe</div>
-                    <div class="user-email">john@example.com</div>
+                <div class="profile-info">
+                    <h3 class="user-name">Loading...</h3>
+                    <p class="user-email">Loading...</p>
                 </div>
             </div>
         </div>
@@ -51,7 +40,7 @@
         <div class="main-content">
             <header>
                 <div class="header-content">
-                    <h1>All Time Capsules</h1>
+                    <h1>My Time Capsules</h1>
                     <p>View and manage all your time capsules</p>
                 </div>
                 <div class="header-actions">
@@ -59,60 +48,331 @@
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Search capsules...">
                     </div>
-                    <div class="notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
+                    <div class="filter-section">
+                        <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="personal">Personal Reflection</option>
+                            <option value="special">Special Occasions</option>
+                            <option value="academic">Academic Growth</option>
+                            <option value="mental">Mental Health</option>
+                            <option value="business">Business Goals</option>
+                            <option value="legacy">Legacy</option>
+                            <option value="social">Social</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="failed">Failed</option>
+                        </select>
                     </div>
                 </div>
             </header>
 
-            <!-- Filters Section -->
-            <div class="filters-section">
-                <div class="filter-group">
-                    <label>Category:</label>
-                    <select id="categoryFilter">
-                        <option value="">All Categories</option>
-                        <option value="personal">Personal Reflection</option>
-                        <option value="special">Special Occasions</option>
-                        <option value="academic">Academic Growth</option>
-                        <option value="mental">Mental Health</option>
-                        <option value="business">Business Goals</option>
-                        <option value="legacy">Legacy</option>
-                        <option value="social">Social</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Status:</label>
-                    <select id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="upcoming">Upcoming</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Sort By:</label>
-                    <select id="sortFilter">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="date">Delivery Date</option>
-                    </select>
-                </div>
-            </div>
-
             <!-- Capsules Grid -->
-            <div class="capsules-grid" id="allCapsules">
-                <!-- Capsules will be dynamically added here -->
-            </div>
+            <div class="capsules-container">
+                <div class="capsule-grid" id="allCapsules">
+                    <!-- Capsules will be dynamically added here -->
+                </div>
 
-            <!-- Pagination -->
-            <div class="pagination">
-                <button class="page-btn" id="prevPage"><i class="fas fa-chevron-left"></i></button>
-                <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
-                <button class="page-btn" id="nextPage"><i class="fas fa-chevron-right"></i></button>
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button class="page-btn" id="prevPage"><i class="fas fa-chevron-left"></i></button>
+                    <span class="page-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                    <button class="page-btn" id="nextPage"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: #f5f7fa;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            margin-bottom: 20px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .capsules-container {
+            flex: 1;
+            width: 100%;
+            padding: 20px 0;
+            margin-top: 0;
+            position: relative;
+        }
+
+        .capsule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .capsule-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+            position: relative;
+        }
+
+        .capsule-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .capsule-info {
+            flex: 1;
+        }
+
+        .capsule-info h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .capsule-info p {
+            color: #666;
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+        }
+
+        .capsule-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .capsule-category {
+            background: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #1976d2;
+        }
+
+        .capsule-date {
+            color: #666;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .capsule-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            text-transform: capitalize;
+        }
+
+        .capsule-status.pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .capsule-status.delivered {
+            background: #e8f5e9;
+            color: #4caf50;
+        }
+
+        .capsule-status.failed {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .capsule-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+
+        .capsule-actions button {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .capsule-actions button:hover {
+            transform: scale(1.1);
+        }
+
+        .view-btn {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .edit-btn {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .delete-btn {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .page-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #666;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .page-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .page-info {
+            color: #666;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-section select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            min-width: 150px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #f44336;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        .search-bar {
+            position: relative;
+            min-width: 300px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 35px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .header-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-bar {
+                min-width: 100%;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .filter-section select {
+                width: 100%;
+            }
+
+            .capsule-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Remove the copyright text from this view */
+        body::after {
+            display: none;
+        }
+    </style>
 
     <script>
         let capsules = [];
@@ -121,6 +381,17 @@
 
         // Fetch capsules when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || !currentUser._id) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Update user profile
+            updateUserProfile();
+
+            // Initial fetch of capsules
             fetchCapsules();
             setupFilters();
             setupPagination();
@@ -128,95 +399,69 @@
 
         async function fetchCapsules() {
             try {
-                const response = await fetch('/api/capsules/my-capsules');
+                const currentUser = JSON.parse(localStorage.getItem('user'));
+                if (!currentUser || !currentUser._id) {
+                    console.error('No user found in localStorage');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                console.log('Fetching capsules for user ID:', currentUser._id);
+                const response = await fetch(`/api/capsules/my-capsules?userId=${currentUser._id}`);
                 if (!response.ok) {
-                    throw new Error('Failed to fetch capsules');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                capsules = data.capsules;
+                
+                // Extract capsules from the response data
+                capsules = data.capsules || [];
+                console.log('Found capsules:', capsules.length);
+                
+                // Store capsules in localStorage
+                localStorage.setItem('capsules', JSON.stringify(capsules));
+                
+                // Update the UI
                 updateCapsulesGrid();
-                updateCategoryCounts();
             } catch (error) {
                 console.error('Error fetching capsules:', error);
-                alert('Failed to load capsules. Please try again.');
-            }
-        }
-
-        function updateCategoryCounts() {
-            const categoryCounts = {};
-            capsules.forEach(capsule => {
-                categoryCounts[capsule.category] = (categoryCounts[capsule.category] || 0) + 1;
-            });
-
-            // Update category counts in the sidebar
-            Object.entries(categoryCounts).forEach(([category, count]) => {
-                const categoryElement = document.querySelector(`.category-item[data-category="${category}"]`);
-                if (categoryElement) {
-                    const countElement = categoryElement.querySelector('.category-count');
-                    if (countElement) {
-                        countElement.textContent = count;
-                    }
+                const grid = document.getElementById('allCapsules');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div class="error-message">
+                            Failed to load capsules. Please try refreshing the page.
+                        </div>
+                    `;
                 }
-            });
-        }
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            }
         }
 
         function updateCapsulesGrid() {
             const grid = document.getElementById('allCapsules');
-            grid.innerHTML = '';
+            if (!grid) return;
 
-            // Get filter values
-            const categoryFilter = document.getElementById('categoryFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-            const sortFilter = document.getElementById('sortFilter').value;
-
-            // Apply filters
-            let filteredCapsules = [...capsules];
-            
-            if (categoryFilter) {
-                filteredCapsules = filteredCapsules.filter(c => c.category === categoryFilter);
-            }
-            
-            if (statusFilter) {
-                filteredCapsules = filteredCapsules.filter(c => c.status === statusFilter);
-            }
-
-            // Apply sorting
-            switch(sortFilter) {
-                case 'newest':
-                    filteredCapsules.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                    break;
-                case 'oldest':
-                    filteredCapsules.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                    break;
-                case 'date':
-                    filteredCapsules.sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate));
-                    break;
+            if (!capsules || capsules.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>No capsules found</p>
+                    </div>
+                `;
+                return;
             }
 
             // Calculate pagination
+            const totalPages = Math.ceil(capsules.length / itemsPerPage);
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
-            const paginatedCapsules = filteredCapsules.slice(startIndex, endIndex);
-            const totalPages = Math.ceil(filteredCapsules.length / itemsPerPage);
+            const paginatedCapsules = capsules.slice(startIndex, endIndex);
 
             // Update pagination info
             document.getElementById('currentPage').textContent = currentPage;
             document.getElementById('totalPages').textContent = totalPages;
 
-            // Update pagination buttons
-            document.getElementById('prevPage').disabled = currentPage === 1;
-            document.getElementById('nextPage').disabled = currentPage === totalPages;
+            // Clear existing content
+            grid.innerHTML = '';
 
             // Display capsules
             paginatedCapsules.forEach(capsule => {
@@ -254,24 +499,53 @@
         }
 
         function setupFilters() {
-            const filters = ['categoryFilter', 'statusFilter', 'sortFilter'];
-            filters.forEach(filterId => {
-                document.getElementById(filterId).addEventListener('change', function() {
-                    currentPage = 1; // Reset to first page when filters change
-                    updateCapsulesGrid();
-                });
-            });
+            const categoryFilter = document.getElementById('categoryFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const searchInput = document.querySelector('.search-bar input');
+
+            function applyFilters() {
+                const category = categoryFilter.value;
+                const status = statusFilter.value;
+                const searchTerm = searchInput.value.toLowerCase();
+
+                // Get all capsules from localStorage
+                const allCapsules = JSON.parse(localStorage.getItem('capsules')) || [];
+                let filteredCapsules = [...allCapsules];
+
+                if (category) {
+                    filteredCapsules = filteredCapsules.filter(c => c.category === category);
+                }
+
+                if (status) {
+                    filteredCapsules = filteredCapsules.filter(c => c.status === status);
+                }
+
+                if (searchTerm) {
+                    filteredCapsules = filteredCapsules.filter(c => 
+                        c.title.toLowerCase().includes(searchTerm) ||
+                        c.message.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                capsules = filteredCapsules;
+                currentPage = 1;
+                updateCapsulesGrid();
+            }
+
+            categoryFilter.addEventListener('change', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', applyFilters);
         }
 
         function setupPagination() {
-            document.getElementById('prevPage').addEventListener('click', function() {
+            document.getElementById('prevPage').addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage--;
                     updateCapsulesGrid();
                 }
             });
 
-            document.getElementById('nextPage').addEventListener('click', function() {
+            document.getElementById('nextPage').addEventListener('click', () => {
                 const totalPages = Math.ceil(capsules.length / itemsPerPage);
                 if (currentPage < totalPages) {
                     currentPage++;
@@ -280,21 +554,73 @@
             });
         }
 
-        function viewCapsule(id) {
-            // Implement view functionality
-            console.log('Viewing capsule:', id);
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
 
-        function editCapsule(id) {
-            // Implement edit functionality
-            console.log('Editing capsule:', id);
+        function updateUserProfile() {
+            const currentUser = JSON.parse(localStorage.getItem('user'));
+            if (currentUser) {
+                const userNameElement = document.querySelector('.user-name');
+                const userEmailElement = document.querySelector('.user-email');
+                if (userNameElement) userNameElement.textContent = currentUser.username || 'User Name';
+                if (userEmailElement) userEmailElement.textContent = currentUser.email || 'user@example.com';
+            }
         }
 
-        function deleteCapsule(id) {
-            if (confirm('Are you sure you want to delete this capsule?')) {
-                capsules = capsules.filter(c => c.id !== id);
-                localStorage.setItem('capsules', JSON.stringify(capsules));
+        // Logout functionality
+        const logoutBtn = document.createElement('li');
+        logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> <span>Logout</span>';
+        logoutBtn.className = 'logout-btn';
+        document.querySelector('.sidebar nav ul').appendChild(logoutBtn);
+
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('capsules');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+
+        async function deleteCapsule(capsuleId) {
+            if (!confirm('Are you sure you want to delete this capsule? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/capsules/delete/${capsuleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to delete capsule');
+                }
+
+                // Remove the capsule from local storage and memory
+                const allCapsules = JSON.parse(localStorage.getItem('capsules')) || [];
+                const updatedCapsules = allCapsules.filter(c => c._id !== capsuleId);
+                localStorage.setItem('capsules', JSON.stringify(updatedCapsules));
+                capsules = updatedCapsules;
+
+                // Reset to first page and update UI
+                currentPage = 1;
                 updateCapsulesGrid();
+
+                // Show success message
+                alert('Capsule deleted successfully');
+            } catch (error) {
+                console.error('Error deleting capsule:', error);
+                alert(error.message || 'Failed to delete capsule. Please try again.');
             }
         }
     </script>

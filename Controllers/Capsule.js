@@ -103,8 +103,51 @@ const getCapsule = async (req, res) => {
     }
 };
 
+// Delete capsule
+const deleteCapsule = async (req, res) => {
+    try {
+        const capsuleId = req.params.id;
+        
+        // Find the capsule first to check if it exists and get file info
+        const capsule = await Capsule.findById(capsuleId);
+        
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        // Delete the capsule
+        await Capsule.findByIdAndDelete(capsuleId);
+
+        // Delete associated files if they exist
+        if (capsule.files && capsule.files.length > 0) {
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            for (const file of capsule.files) {
+                try {
+                    const filePath = path.join(__dirname, '../public', file.path);
+                    await fs.unlink(filePath);
+                } catch (err) {
+                    console.error('Error deleting file:', err);
+                    // Continue with deletion even if file removal fails
+                }
+            }
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Capsule deleted successfully',
+            deletedCapsule: capsule 
+        });
+    } catch (error) {
+        console.error('Delete capsule error:', error);
+        res.status(500).json({ error: 'Failed to delete capsule' });
+    }
+};
+
 module.exports = {
     createCapsule,
     getMyCapsules,
-    getCapsule
+    getCapsule,
+    deleteCapsule
 };

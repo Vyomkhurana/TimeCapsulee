@@ -299,6 +299,9 @@
     let capsules = JSON.parse(localStorage.getItem('capsules')) || [];
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize capsules from localStorage or as empty array
+        window.capsules = JSON.parse(localStorage.getItem('capsules')) || [];
+        
         // Check authentication first
         if (!checkAuth()) return;
 
@@ -340,21 +343,51 @@
         createCapsuleForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Get form data
-            const category = document.getElementById('capsuleCategory').value;
-            const title = document.getElementById('capsuleTitle').value;
-            const message = document.getElementById('capsuleMessage').value;
-            const date = document.getElementById('capsuleDate').value;
-            const reminder = document.querySelector('input[name="reminder"]').checked;
-            const emailDelivery = document.querySelector('input[name="emailDelivery"]').checked;
-            const files = document.getElementById('capsuleFiles').files;
-
             try {
+                // Get form data
+                const category = document.getElementById('capsuleCategory').value;
+                const title = document.getElementById('capsuleTitle').value;
+                const message = document.getElementById('capsuleMessage').value;
+                const dateInput = document.getElementById('capsuleDate').value;
+                const reminder = document.querySelector('input[name="reminder"]').checked;
+                const emailDelivery = document.querySelector('input[name="emailDelivery"]').checked;
+                const files = document.getElementById('capsuleFiles').files;
+
+                // Validate required fields
+                if (!category || !title || !message || !dateInput) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // Validate and format the date
+                const scheduleDate = new Date(dateInput);
+                const now = new Date();
+
+                // Check if the date is valid
+                if (isNaN(scheduleDate.getTime())) {
+                    alert('Please enter a valid date');
+                    return;
+                }
+
+                // Check if the date is in the future
+                if (scheduleDate <= now) {
+                    alert('Please select a future date');
+                    return;
+                }
+
+                // Check if the date is within reasonable bounds (e.g., next 100 years)
+                const maxDate = new Date();
+                maxDate.setFullYear(maxDate.getFullYear() + 100);
+                if (scheduleDate > maxDate) {
+                    alert('Please select a date within the next 100 years');
+                    return;
+                }
+
                 const formData = new FormData();
                 formData.append('category', category);
                 formData.append('title', title);
                 formData.append('message', message);
-                formData.append('scheduleDate', date);
+                formData.append('scheduleDate', scheduleDate.toISOString());
                 formData.append('reminder', reminder);
                 formData.append('emailDelivery', emailDelivery);
 
@@ -363,7 +396,7 @@
                     formData.append('files', files[i]);
                 }
 
-                const result = await createCapsule(formData);
+                await createCapsule(formData);
 
                 // Close modal and reset form
                 modal.style.display = 'none';
@@ -373,40 +406,180 @@
                 alert('Time capsule created successfully!');
             } catch (error) {
                 console.error('Error creating capsule:', error);
-                alert('Failed to create time capsule. Please try again.');
+                alert(error.message || 'Failed to create time capsule. Please try again.');
             }
         });
+
+        // Add date input validation
+        const capsuleDateInput = document.getElementById('capsuleDate');
+        if (capsuleDateInput) {
+            // Set minimum date to today
+            const today = new Date();
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+            capsuleDateInput.min = today.toISOString().slice(0, 16);
+
+            // Set maximum date to 100 years from now
+            const maxDate = new Date();
+            maxDate.setFullYear(maxDate.getFullYear() + 100);
+            capsuleDateInput.max = maxDate.toISOString().slice(0, 16);
+
+            // Add input event listener for real-time validation
+            capsuleDateInput.addEventListener('input', function() {
+                const selectedDate = new Date(this.value);
+                const now = new Date();
+
+                if (selectedDate <= now) {
+                    this.setCustomValidity('Please select a future date');
+                } else if (selectedDate > maxDate) {
+                    this.setCustomValidity('Please select a date within the next 100 years');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        }
 
         // Function to fetch capsules from the server
         async function fetchAndUpdateCapsules() {
             try {
-                // Get the current user's ID from localStorage
                 const currentUser = JSON.parse(localStorage.getItem('user'));
                 if (!currentUser || !currentUser._id) {
-                    console.error('No user found');
-                    // Redirect to login if no user found
+                    console.error('No user found in localStorage');
                     window.location.href = '/login';
                     return;
                 }
 
-                console.log('Fetching capsules for user:', currentUser._id);
+                console.log('Fetching capsules for user ID:', currentUser._id);
                 const response = await fetch(`/api/capsules/my-capsules?userId=${currentUser._id}`);
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        // Unauthorized - redirect to login
-                        window.location.href = '/login';
-                        return;
-                    }
-                    throw new Error('Failed to fetch capsules');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                capsules = data.capsules;
-                console.log('Loaded capsules:', capsules);
-                updateUI();
-                updateCategoryCounts();
+                
+                // Extract capsules from the response data
+                const capsules = data.capsules || [];
+                console.log('Found capsules:', capsules.length, capsules);
+                
+                // Store capsules in localStorage and global variable
+                localStorage.setItem('capsules', JSON.stringify(capsules));
+                window.capsules = capsules; // Make capsules available globally
+                
+                // Update UI with the fetched capsules
+                updateRecentActivity(capsules);
+                updateUpcomingCapsules(capsules);
+                updateCategoryCounts(capsules);
             } catch (error) {
                 console.error('Error fetching capsules:', error);
+                // Show error message in the UI
+                const recentActivity = document.getElementById('recentActivity');
+                const upcomingCapsules = document.getElementById('upcomingCapsules');
+                
+                if (recentActivity) {
+                    recentActivity.innerHTML = `
+                        <div class="error-message">
+                            Failed to load recent activity. Please try refreshing the page.
+                        </div>
+                    `;
+                }
+                
+                if (upcomingCapsules) {
+                    upcomingCapsules.innerHTML = `
+                        <div class="error-message">
+                            Failed to load upcoming capsules. Please try refreshing the page.
+                        </div>
+                    `;
+                }
             }
+        }
+
+        function updateRecentActivity(capsules) {
+            const recentActivity = document.getElementById('recentActivity');
+            if (!recentActivity) {
+                console.error('Recent activity element not found');
+                return;
+            }
+
+            if (!capsules || capsules.length === 0) {
+                recentActivity.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>No recent activity</p>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log('Updating recent activity with capsules:', capsules);
+
+            // Sort capsules by creation date (newest first)
+            const sortedCapsules = [...capsules].sort((a, b) => 
+                new Date(b.createdAt) - new Date(a.createdAt)
+            );
+
+            // Take only the 5 most recent capsules
+            const recentCapsules = sortedCapsules.slice(0, 5);
+
+            recentActivity.innerHTML = recentCapsules.map(capsule => `
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="activity-content">
+                        <h4>${capsule.title}</h4>
+                        <p>${capsule.message.substring(0, 50)}${capsule.message.length > 50 ? '...' : ''}</p>
+                        <span class="activity-date">Created: ${formatDate(capsule.createdAt)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateUpcomingCapsules(capsules) {
+            const upcomingCapsules = document.getElementById('upcomingCapsules');
+            if (!upcomingCapsules) {
+                console.error('Upcoming capsules element not found');
+                return;
+            }
+
+            if (!capsules || capsules.length === 0) {
+                upcomingCapsules.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar"></i>
+                        <p>No upcoming capsules</p>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log('Updating upcoming capsules with:', capsules);
+
+            // Filter for upcoming capsules and sort by schedule date
+            const upcoming = capsules
+                .filter(capsule => new Date(capsule.scheduleDate) > new Date())
+                .sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate))
+                .slice(0, 5);
+
+            if (upcoming.length === 0) {
+                upcomingCapsules.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar"></i>
+                        <p>No upcoming capsules</p>
+                    </div>
+                `;
+                return;
+            }
+
+            upcomingCapsules.innerHTML = upcoming.map(capsule => `
+                <div class="upcoming-item">
+                    <div class="upcoming-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="upcoming-content">
+                        <h4>${capsule.title}</h4>
+                        <p>${capsule.message.substring(0, 50)}${capsule.message.length > 50 ? '...' : ''}</p>
+                        <span class="upcoming-date">Scheduled for: ${formatDate(capsule.scheduleDate)}</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Function to create a new capsule
@@ -428,7 +601,8 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to create capsule');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to create capsule');
                 }
 
                 const result = await response.json();
@@ -443,7 +617,7 @@
             }
         }
 
-        function updateCategoryCounts() {
+        function updateCategoryCounts(capsules) {
             const categoryCounts = {};
             capsules.forEach(capsule => {
                 categoryCounts[capsule.category] = (categoryCounts[capsule.category] || 0) + 1;
@@ -466,68 +640,15 @@
             document.getElementById('upcoming-capsules').textContent = capsules.filter(c => c.status === 'pending' && new Date(c.scheduleDate) > new Date()).length;
         }
 
-        function updateUI() {
-            updateRecentActivity();
-            updateUpcomingCapsules();
-            updateCategoryCounts();
-        }
-
-        function updateRecentActivity() {
-            const recentActivity = document.getElementById('recentActivity');
-            recentActivity.innerHTML = '';
-
-            // Sort capsules by creation date (newest first)
-            const sortedCapsules = [...capsules].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-            // Show last 5 capsules
-            sortedCapsules.slice(0, 5).forEach(capsule => {
-                const activityItem = document.createElement('div');
-                activityItem.className = 'activity-item';
-                activityItem.innerHTML = `
-                    <div class="activity-icon">
-                        <i class="fas fa-capsules"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>${capsule.title}</h4>
-                        <p>Created in ${capsule.category}</p>
-                        <span class="activity-date">${formatDate(capsule.createdAt)}</span>
-                    </div>
-                `;
-                recentActivity.appendChild(activityItem);
-            });
-        }
-
-        function updateUpcomingCapsules() {
-            const upcomingCapsules = document.getElementById('upcomingCapsules');
-            upcomingCapsules.innerHTML = '';
-
-            // Filter and sort upcoming capsules
-            const upcoming = capsules
-                .filter(c => c.status === 'pending' && new Date(c.scheduleDate) > new Date())
-                .sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate));
-
-            upcoming.forEach(capsule => {
-                const capsuleCard = document.createElement('div');
-                capsuleCard.className = 'capsule-item';
-                
-                // Get the first image file if it exists
-                const imageFile = capsule.files && capsule.files.find(file => file.type.startsWith('image/'));
-                
-                capsuleCard.innerHTML = `
-                    <div class="capsule-preview">
-                        ${imageFile ? 
-                            `<img src="${imageFile.path}" alt="${capsule.title}" class="capsule-image">` :
-                            `<i class="fas fa-capsules"></i>`
-                        }
-                    </div>
-                    <h3>${capsule.title}</h3>
-                    <p>${capsule.category}</p>
-                    <div class="capsule-date">
-                        <i class="fas fa-calendar"></i>
-                        ${formatDate(capsule.scheduleDate)}
-                    </div>
-                `;
-                upcomingCapsules.appendChild(capsuleCard);
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
 
@@ -565,95 +686,165 @@
         });
 
         function showCategoryCapsules(category) {
-            console.log('Showing capsules for category:', category);
-            console.log('Available capsules:', capsules);
+            const capsules = window.capsules || [];
+            const categoryCapsules = capsules.filter(capsule => capsule.category === category);
             
-            // Create modal if it doesn't exist
-            let modal = document.getElementById('categoryModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'categoryModal';
-                modal.className = 'modal';
-                document.body.appendChild(modal);
-            }
-
-            // Filter capsules by category
-            const categoryCapsules = capsules.filter(capsule => {
-                console.log('Checking capsule:', capsule.category, 'against:', category);
-                // Normalize both strings for comparison
-                const normalizedCapsuleCategory = capsule.category.toLowerCase().trim();
-                const normalizedCategory = category.toLowerCase().trim();
-                console.log('Normalized comparison:', normalizedCapsuleCategory, '===', normalizedCategory);
-                return normalizedCapsuleCategory === normalizedCategory;
-            });
-            console.log('Filtered capsules:', categoryCapsules);
-
-            // Get the display name for the category
-            const categoryDisplayNames = {
-                'personal': 'Personal Reflection',
-                'special': 'Special Occasions',
-                'academic': 'Academic Growth',
-                'mental': 'Mental Health',
-                'business': 'Business Goals',
-                'legacy': 'Legacy',
-                'social': 'Social'
-            };
-
             // Create modal content
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>${categoryDisplayNames[category] || category} Capsules</h2>
-                        <span class="close-modal">&times;</span>
-                    </div>
-                    <div class="modal-body">
-                        <div class="category-capsules-list">
-                            ${categoryCapsules.length === 0 ? 
-                                '<p class="no-capsules">No capsules found in this category.</p>' :
-                                categoryCapsules.map(capsule => `
-                                    <div class="capsule-card">
-                                        <div class="capsule-info">
-                                            <h3>${capsule.title}</h3>
-                                            <p>${capsule.message.substring(0, 100)}${capsule.message.length > 100 ? '...' : ''}</p>
-                                            ${capsule.files && capsule.files.length > 0 ? `
-                                                <div class="capsule-files">
-                                                    ${capsule.files.map(file => `
-                                                        <div class="file-preview">
-                                                            ${file.type.startsWith('image/') ? 
-                                                                `<img src="${file.path}" alt="Preview">` : 
-                                                                `<i class="fas fa-file"></i>`
-                                                            }
-                                                            <span>${file.name}</span>
-                                                        </div>
-                                                    `).join('')}
-                                                </div>
-                                            ` : ''}
-                                            <div class="capsule-meta">
-                                                <span>Delivery: ${formatDate(capsule.scheduleDate)}</span>
-                                                <span class="capsule-status ${capsule.status.toLowerCase()}">${capsule.status}</span>
-                                            </div>
-                                        </div>
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content category-modal-content';
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2>${category.charAt(0).toUpperCase() + category.slice(1)} Capsules</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="category-capsules-grid">
+                        ${categoryCapsules.length === 0 ? `
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No capsules in this category</p>
+                            </div>
+                        ` : categoryCapsules.map(capsule => `
+                            <div class="capsule-card">
+                                <div class="capsule-info">
+                                    <h3>${capsule.title}</h3>
+                                    <p>${capsule.message.substring(0, 100)}${capsule.message.length > 100 ? '...' : ''}</p>
+                                    <div class="capsule-meta">
+                                        <span class="capsule-date">
+                                            <i class="fas fa-calendar"></i>
+                                            ${formatDate(capsule.scheduleDate)}
+                                        </span>
+                                        <span class="capsule-status ${capsule.status}">
+                                            ${capsule.status}
+                                        </span>
                                     </div>
-                                `).join('')
-                            }
-                        </div>
+                                </div>
+                                <div class="capsule-actions">
+                                    <button class="view-btn" onclick="viewCapsule('${capsule._id}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="edit-btn" onclick="editCapsule('${capsule._id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-btn" onclick="deleteCapsule('${capsule._id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
 
-            // Show modal
-            modal.style.display = 'block';
+            // Create and show modal
+            const modal = document.createElement('div');
+            modal.className = 'modal category-modal';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // Add styles for the category modal
+            const style = document.createElement('style');
+            style.textContent = `
+                .category-modal {
+                    display: block;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    overflow-y: auto;
+                }
+
+                .category-modal-content {
+                    background: white;
+                    margin: 50px auto;
+                    padding: 0;
+                    width: 90%;
+                    max-width: 1200px;
+                    border-radius: 12px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    position: relative;
+                }
+
+                .category-modal .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .category-modal .modal-header h2 {
+                    margin: 0;
+                    color: #333;
+                }
+
+                .category-modal .close-modal {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #666;
+                    cursor: pointer;
+                    padding: 5px;
+                }
+
+                .category-modal .close-modal:hover {
+                    color: #333;
+                }
+
+                .category-modal .modal-body {
+                    padding: 20px;
+                    max-height: calc(100vh - 150px);
+                    overflow-y: auto;
+                }
+
+                .category-capsules-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                }
+
+                .category-capsules-grid .capsule-card {
+                    background: white;
+                    border-radius: 10px;
+                    padding: 20px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                }
+
+                .category-capsules-grid .capsule-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
+
+                @media (max-width: 768px) {
+                    .category-modal-content {
+                        width: 95%;
+                        margin: 20px auto;
+                    }
+
+                    .category-capsules-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
 
             // Add close button functionality
             const closeBtn = modal.querySelector('.close-modal');
             closeBtn.onclick = function() {
-                modal.style.display = 'none';
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
             }
 
             // Close modal when clicking outside
             window.onclick = function(event) {
                 if (event.target == modal) {
-                    modal.style.display = 'none';
+                    document.body.removeChild(modal);
+                    document.head.removeChild(style);
                 }
             }
         }
@@ -676,91 +867,7 @@
             });
 
             // Update the UI with filtered capsules
-            updateRecentActivity(filteredCapsules);
-            updateUpcomingCapsules(filteredCapsules);
-            updateCategoryCounts(filteredCapsules);
-        }
-
-        function updateRecentActivity(filteredCapsules = capsules) {
-            const recentActivity = document.getElementById('recentActivity');
-            recentActivity.innerHTML = '';
-
-            // Sort capsules by creation date (newest first)
-            const sortedCapsules = [...filteredCapsules].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-            // Show last 5 capsules
-            sortedCapsules.slice(0, 5).forEach(capsule => {
-                const activityItem = document.createElement('div');
-                activityItem.className = 'activity-item';
-                activityItem.innerHTML = `
-                    <div class="activity-icon">
-                        <i class="fas fa-capsules"></i>
-                    </div>
-                    <div class="activity-content">
-                        <h4>${capsule.title}</h4>
-                        <p>Created in ${capsule.category}</p>
-                        <span class="activity-date">${formatDate(capsule.createdAt)}</span>
-                    </div>
-                `;
-                recentActivity.appendChild(activityItem);
-            });
-        }
-
-        function updateUpcomingCapsules(filteredCapsules = capsules) {
-            const upcomingCapsules = document.getElementById('upcomingCapsules');
-            upcomingCapsules.innerHTML = '';
-
-            // Filter and sort upcoming capsules
-            const upcoming = filteredCapsules
-                .filter(c => c.status === 'pending' && new Date(c.scheduleDate) > new Date())
-                .sort((a, b) => new Date(a.scheduleDate) - new Date(b.scheduleDate));
-
-            upcoming.forEach(capsule => {
-                const capsuleCard = document.createElement('div');
-                capsuleCard.className = 'capsule-item';
-                
-                // Get the first image file if it exists
-                const imageFile = capsule.files && capsule.files.find(file => file.type.startsWith('image/'));
-                
-                capsuleCard.innerHTML = `
-                    <div class="capsule-preview">
-                        ${imageFile ? 
-                            `<img src="${imageFile.path}" alt="${capsule.title}" class="capsule-image">` :
-                            `<i class="fas fa-capsules"></i>`
-                        }
-                    </div>
-                    <h3>${capsule.title}</h3>
-                    <p>${capsule.category}</p>
-                    <div class="capsule-date">
-                        <i class="fas fa-calendar"></i>
-                        ${formatDate(capsule.scheduleDate)}
-                    </div>
-                `;
-                upcomingCapsules.appendChild(capsuleCard);
-            });
-        }
-
-        function updateCategoryCounts(filteredCapsules = capsules) {
-            const categoryCounts = {};
-            filteredCapsules.forEach(capsule => {
-                categoryCounts[capsule.category] = (categoryCounts[capsule.category] || 0) + 1;
-            });
-
-            // Update category counts in the cards
-            const categories = ['personal', 'special', 'academic', 'mental', 'business', 'legacy', 'social'];
-            categories.forEach(category => {
-                const count = categoryCounts[category] || 0;
-                const countElement = document.getElementById(`${category}-count`);
-                if (countElement) {
-                    countElement.textContent = `${count} capsule${count !== 1 ? 's' : ''}`;
-                }
-            });
-
-            // Update total stats
-            document.getElementById('total-capsules').textContent = filteredCapsules.length;
-            document.getElementById('scheduled-capsules').textContent = filteredCapsules.filter(c => c.status === 'pending').length;
-            document.getElementById('delivered-capsules').textContent = filteredCapsules.filter(c => c.status === 'delivered').length;
-            document.getElementById('upcoming-capsules').textContent = filteredCapsules.filter(c => c.status === 'pending' && new Date(c.scheduleDate) > new Date()).length;
+            updateUI(filteredCapsules);
         }
 
         // Settings Modal Functionality
@@ -806,6 +913,209 @@
 
         // Update user profile
         updateUserProfile();
+
+        // Add delete capsule functionality
+        async function deleteCapsule(capsuleId) {
+            if (!confirm('Are you sure you want to delete this capsule? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/capsules/delete/${capsuleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to delete capsule');
+                }
+
+                // Remove the capsule from local storage
+                const capsules = JSON.parse(localStorage.getItem('capsules')) || [];
+                const updatedCapsules = capsules.filter(c => c._id !== capsuleId);
+                localStorage.setItem('capsules', JSON.stringify(updatedCapsules));
+                window.capsules = updatedCapsules;
+
+                // Update the UI
+                await fetchAndUpdateCapsules();
+
+                // Show success message
+                alert('Capsule deleted successfully');
+
+                // Close modal if open
+                const modal = document.querySelector('.category-modal');
+                if (modal) {
+                    document.body.removeChild(modal);
+                    const style = document.querySelector('style[data-modal-style]');
+                    if (style) {
+                        document.head.removeChild(style);
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting capsule:', error);
+                alert(error.message || 'Failed to delete capsule. Please try again.');
+            }
+        }
+
+        // Add view capsule functionality
+        function viewCapsule(capsuleId) {
+            const capsule = window.capsules.find(c => c._id === capsuleId);
+            if (!capsule) return;
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content view-modal-content';
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2>${capsule.title}</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="capsule-details">
+                        <div class="capsule-meta">
+                            <span class="capsule-category">${capsule.category}</span>
+                            <span class="capsule-date">
+                                <i class="fas fa-calendar"></i>
+                                ${formatDate(capsule.scheduleDate)}
+                            </span>
+                            <span class="capsule-status ${capsule.status}">
+                                ${capsule.status}
+                            </span>
+                        </div>
+                        <div class="capsule-message">
+                            <p>${capsule.message}</p>
+                        </div>
+                        ${capsule.files && capsule.files.length > 0 ? `
+                            <div class="capsule-files">
+                                <h3>Attached Files</h3>
+                                <div class="files-grid">
+                                    ${capsule.files.map(file => `
+                                        <div class="file-item">
+                                            ${file.mimetype.startsWith('image/') 
+                                                ? `<img src="/uploads/${file.filename}" alt="${file.originalname}">`
+                                                : `<i class="fas fa-file"></i>`
+                                            }
+                                            <span>${file.originalname}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal view-modal';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            // Add styles for the view modal
+            const style = document.createElement('style');
+            style.setAttribute('data-modal-style', '');
+            style.textContent = `
+                .view-modal {
+                    display: block;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    overflow-y: auto;
+                }
+
+                .view-modal-content {
+                    background: white;
+                    margin: 50px auto;
+                    padding: 0;
+                    width: 90%;
+                    max-width: 800px;
+                    border-radius: 12px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                }
+
+                .view-modal .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .view-modal .modal-body {
+                    padding: 20px;
+                }
+
+                .capsule-details {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .capsule-message {
+                    line-height: 1.6;
+                    color: #333;
+                }
+
+                .capsule-files {
+                    margin-top: 20px;
+                }
+
+                .files-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                    gap: 15px;
+                    margin-top: 10px;
+                }
+
+                .file-item {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                .file-item img {
+                    width: 100%;
+                    height: 150px;
+                    object-fit: cover;
+                    border-radius: 8px;
+                }
+
+                .file-item i {
+                    font-size: 3em;
+                    color: #666;
+                }
+
+                .file-item span {
+                    font-size: 0.9em;
+                    color: #666;
+                    text-align: center;
+                    word-break: break-word;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Close button functionality
+            const closeBtn = modal.querySelector('.close-modal');
+            closeBtn.onclick = function() {
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
+            }
+
+            // Click outside to close
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    document.body.removeChild(modal);
+                    document.head.removeChild(style);
+                }
+            }
+        }
     });
 
     // Function to update user profile information
