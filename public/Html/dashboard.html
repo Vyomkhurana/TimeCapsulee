@@ -226,18 +226,6 @@
                         </label>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="reminder">
-                        <span>Send me a reminder 3 days before delivery</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="emailDelivery">
-                        <span>Deliver via email</span>
-                    </label>
-                </div>
                 <div class="form-actions">
                     <button type="button" class="cancel-btn">Cancel</button>
                     <button type="submit" class="submit-btn">Create Capsule</button>
@@ -343,70 +331,51 @@
         createCapsuleForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Get current user from localStorage
+            const currentUser = JSON.parse(localStorage.getItem('user'));
+            if (!currentUser || !currentUser._id) {
+                alert('Please log in to create a capsule');
+                window.location.href = '/login';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('capsuleTitle').value);
+            formData.append('message', document.getElementById('capsuleMessage').value);
+            formData.append('category', document.getElementById('capsuleCategory').value);
+            formData.append('scheduleDate', document.getElementById('capsuleDate').value);
+            formData.append('creator', currentUser._id);
+
+            // Add files if any
+            const fileInput = document.getElementById('capsuleFiles');
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('files', fileInput.files[i]);
+                }
+            }
+
             try {
-                // Get form data
-                const category = document.getElementById('capsuleCategory').value;
-                const title = document.getElementById('capsuleTitle').value;
-                const message = document.getElementById('capsuleMessage').value;
-                const dateInput = document.getElementById('capsuleDate').value;
-                const reminder = document.querySelector('input[name="reminder"]').checked;
-                const emailDelivery = document.querySelector('input[name="emailDelivery"]').checked;
-                const files = document.getElementById('capsuleFiles').files;
+                const response = await fetch('/api/capsules/create', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                // Validate required fields
-                if (!category || !title || !message || !dateInput) {
-                    alert('Please fill in all required fields');
-                    return;
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create capsule');
                 }
 
-                // Validate and format the date
-                const scheduleDate = new Date(dateInput);
-                const now = new Date();
-
-                // Check if the date is valid
-                if (isNaN(scheduleDate.getTime())) {
-                    alert('Please enter a valid date');
-                    return;
-                }
-
-                // Check if the date is in the future
-                if (scheduleDate <= now) {
-                    alert('Please select a future date');
-                    return;
-                }
-
-                // Check if the date is within reasonable bounds (e.g., next 100 years)
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() + 100);
-                if (scheduleDate > maxDate) {
-                    alert('Please select a date within the next 100 years');
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('category', category);
-                formData.append('title', title);
-                formData.append('message', message);
-                formData.append('scheduleDate', scheduleDate.toISOString());
-                formData.append('reminder', reminder);
-                formData.append('emailDelivery', emailDelivery);
-
-                // Append each file
-                for (let i = 0; i < files.length; i++) {
-                    formData.append('files', files[i]);
-                }
-
-                await createCapsule(formData);
-
-                // Close modal and reset form
-                modal.style.display = 'none';
-                createCapsuleForm.reset();
-
+                // Close modal and refresh capsules
+                document.getElementById('createCapsuleModal').style.display = 'none';
+                document.getElementById('createCapsuleForm').reset();
+                await fetchAndUpdateCapsules();
+                
                 // Show success message
-                alert('Time capsule created successfully!');
+                alert('Capsule created successfully!');
             } catch (error) {
                 console.error('Error creating capsule:', error);
-                alert(error.message || 'Failed to create time capsule. Please try again.');
+                alert(error.message || 'Failed to create capsule. Please try again.');
             }
         });
 
@@ -580,41 +549,6 @@
                     </div>
                 </div>
             `).join('');
-        }
-
-        // Function to create a new capsule
-        async function createCapsule(formData) {
-            try {
-                const currentUser = JSON.parse(localStorage.getItem('user'));
-                if (!currentUser || !currentUser._id) {
-                    alert('Please log in to create a capsule');
-                    window.location.href = '/login';
-                    return;
-                }
-
-                // Add the user ID to the form data
-                formData.append('creator', currentUser._id);
-
-                const response = await fetch('/api/capsules/create', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to create capsule');
-                }
-
-                const result = await response.json();
-                console.log('Capsule created:', result);
-
-                // Refresh the capsules list
-                await fetchAndUpdateCapsules();
-                return result;
-            } catch (error) {
-                console.error('Error creating capsule:', error);
-                throw error;
-            }
         }
 
         function updateCategoryCounts(capsules) {

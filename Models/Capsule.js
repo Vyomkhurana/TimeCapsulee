@@ -34,13 +34,9 @@ const capsuleSchema = new mongoose.Schema({
         enum: ['pending', 'delivered', 'failed'],
         default: 'pending'
     },
-    reminder: {
-        type: Boolean,
-        default: false
-    },
-    emailDelivery: {
-        type: Boolean,
-        default: true
+    error: {
+        type: String,
+        default: null
     },
     createdAt: {
         type: Date,

@@ -1,32 +1,37 @@
 # Time Capsule
 
-A digital time capsule application that allows users to create and store messages, memories, and media for future delivery.
+A web application that allows users to create digital time capsules and schedule them for future delivery via email.
 
 ## Features
 
-- User authentication (signup/login)
-- Create time capsules with messages and media
-- Schedule delivery dates
-- Email notifications and reminders
-- Category-based organization
-- File uploads support
-- Responsive dashboard
+- Create time capsules with messages, files, and media
+- Schedule capsules for future delivery
+- Categorize capsules (personal, special, academic, mental, business, legacy, social)
+- Email delivery of capsules on scheduled dates
+- Dashboard with category-wise organization
+- Secure user authentication
+- File upload support
 
 ## Tech Stack
 
 - Node.js
 - Express.js
 - MongoDB
-- Nodemailer for email notifications
-- Multer for file uploads
-- JWT for authentication
+- HTML/CSS/JavaScript
+- Nodemailer for email delivery
 
-## Setup
+## Prerequisites
+
+- Node.js (v14 or higher)
+- MongoDB
+- Gmail account (for email delivery)
+
+## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/timecapsule.git
-cd timecapsule
+git clone [your-repo-url]
+cd TimeCapsulee
 ```
 
 2. Install dependencies:
@@ -37,35 +42,45 @@ npm install
 3. Create a `.env` file in the root directory with the following variables:
 ```
 PORT=3000
-MONGODB_URI=your_mongodb_uri
+MONGODB_URI=mongodb://localhost:27017/timecapsule
 JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_email
-EMAIL_PASSWORD=your_app_password
+BASE_URL=http://localhost:3000
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASSWORD=your_gmail_app_password
 ```
 
-4. Start the server:
+4. Start the application:
 ```bash
 npm start
 ```
 
+## Setting up Gmail for Email Delivery
+
+1. Go to your Google Account settings (https://myaccount.google.com)
+2. Enable 2-Step Verification
+3. Go to Security > App Passwords
+4. Select "Mail" and "Windows Computer"
+5. Generate and copy the 16-character password
+6. Use this password in your .env file as EMAIL_PASSWORD
+
 ## Usage
 
-1. Sign up for a new account
-2. Log in to your dashboard
-3. Create a new time capsule
-4. Add your message and media
-5. Set a delivery date
-6. Choose email delivery and reminder options
-7. Save your capsule
+1. Register/Login to your account
+2. Create a new time capsule from the dashboard
+3. Fill in the capsule details:
+   - Title
+   - Message
+   - Category
+   - Schedule Date
+   - Optional: Add files/media
+4. Submit the capsule
+5. View your capsules organized by category
+6. Receive your capsule via email on the scheduled date
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Feel free to submit issues and enhancement requests.
 
 ## License
 
-This project is licensed under the ISC License. 
+[MIT License](LICENSE) 

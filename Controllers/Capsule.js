@@ -1,6 +1,7 @@
 const Capsule = require('../Models/Capsule');
 const multer = require('multer');
 const path = require('path');
+const mongoose = require('mongoose');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -31,9 +32,9 @@ const createCapsule = async (req, res) => {
                 return res.status(400).json({ error: err.message });
             }
 
-            const { title, message, scheduleDate, category, reminder, emailDelivery, creator } = req.body;
+            const { title, message, scheduleDate, category, creator } = req.body;
             const files = req.files?.map(file => ({
-                filename: file.originalname,
+                filename: file.filename,
                 path: file.path.replace('public', ''), // Make path relative to public directory
                 mimetype: file.mimetype
             }));
@@ -45,9 +46,7 @@ const createCapsule = async (req, res) => {
                 category,
                 files: files || [],
                 scheduleDate,
-                reminder: reminder === 'true',
-                emailDelivery: emailDelivery === 'true',
-                creator: creator // Use the actual user ID from the request
+                creator: new mongoose.Types.ObjectId(creator) // Convert string ID to ObjectId
             });
 
             res.status(201).json({
@@ -57,7 +56,7 @@ const createCapsule = async (req, res) => {
         });
     } catch (err) {
         console.error('Create capsule error:', err);
-        res.status(500).json({ error: 'Failed to create time capsule' });
+        res.status(500).json({ error: err.message || 'Failed to create time capsule' });
     }
 };
 
