@@ -1,3 +1,4 @@
+require('dotenv').config();
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -8,8 +9,6 @@ const mongoose = require('./db'); // MongoDB connection
 const cors = require('cors');
 const capsuleRouter = require('./routes/capsules');
 const { startScheduler } = require('./services/scheduler');
-
-const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 
 const app = express();
@@ -25,18 +24,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes
+// API Routes
 app.use('/users', usersRouter);
 app.use('/api/capsules', capsuleRouter);
 
 // Serve Static HTML Pages
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'index.html'));
-});
-
-// Redirect /index to root
-app.get('/index', (req, res) => {
-  res.redirect('/');
 });
 
 app.get('/login', (req, res) => {
@@ -94,9 +88,6 @@ app.get('/terms', (req, res) => {
 app.get('/cookies', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'cookies.html'));
 });
-
-// API routes
-app.use('/', indexRouter);
 
 // Handle 404 Errors
 app.use((req, res, next) => {
