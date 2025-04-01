@@ -54,6 +54,35 @@ EMAIL_PASSWORD=your_gmail_app_password
 npm start
 ```
 
+## Opening in IntelliJ IDEA
+
+To properly view all folders in IntelliJ IDEA when cloning from GitHub:
+
+1. First, close any open projects in IntelliJ IDEA
+2. Select "Open" (not "Open Project")
+3. Navigate to your cloned folder
+4. Select the `package.json` file specifically (this is crucial!)
+5. Click "Open as Project"
+6. When prompted about the Node.js project:
+   - Choose "Trust Project"
+   - If asked about loading dependencies from package.json, select "Yes"
+7. Wait for IntelliJ to finish indexing (progress bar at bottom)
+8. If folders aren't visible:
+   - Go to View > Tool Windows > Project
+   - Click on the gear icon (⚙️) in the Project view toolbar
+   - Make sure "Show Excluded Files" is checked
+   - Select "Project Structure..."
+   - Go to "Modules" and mark all directories as "Sources"
+
+## Project Structure
+
+- `/public` - Static assets and HTML files
+- `/routes` - API routes
+- `/Models` - Database models
+- `/Controllers` - Request handlers
+- `/config` - Configuration files
+- `/services` - Services like email and scheduler
+
 ## Setting up Gmail for Email Delivery
 
 1. Go to your Google Account settings (https://myaccount.google.com)
