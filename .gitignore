@@ -1,14 +1,26 @@
 # Dependencies
 node_modules/
 package-lock.json
+yarn.lock
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+config/secrets.js
 
 # Logs
 logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -18,6 +30,8 @@ pids
 
 # Directory for uploaded files
 public/uploads/
+uploads/
+tmp/
 
 # IDE and editor files
 .idea/
@@ -25,18 +39,37 @@ public/uploads/
 *.swp
 *.swo
 .DS_Store
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
 
 # Build output
 dist/
 build/
+out/
+.next/
 
 # Coverage directory used by tools like istanbul
 coverage/
+.nyc_output/
 
 # Temporary files
 *.tmp
 *.temp
+.cache/
 
-# Debugging
-yarn-debug.log
-yarn-error.log 
+# Debug files
+.node-xmlhttprequest-*
+
+# MongoDB
+*.mongodb
+mongod.lock
+mongodb.log
+
+# System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/ 
