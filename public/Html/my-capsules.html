@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Capsules - TimeCapsule</title>
+    <link rel="stylesheet" href="/stylesheets/dashboard-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .capsule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .capsule-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .capsule-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .capsule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .capsule-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .capsule-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-scheduled {
+            background: #ebf5ff;
+            color: #3182ce;
+        }
+
+        .status-delivered {
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .status-draft {
+            background: #f7fafc;
+            color: #718096;
+        }
+
+        .capsule-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .capsule-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .capsule-meta i {
+            color: var(--primary-color);
+        }
+
+        .capsule-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .search-bar i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fas fa-hourglass-half"></i> <span>TimeCapsule</span></h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="/my-capsules" class="active"><i class="fas fa-box-archive"></i> <span>My Capsules</span></a></li>
+            <li><a href="/schedule"><i class="fas fa-calendar"></i> <span>Schedule</span></a></li>
+            <li><a href="/analytics"><i class="fas fa-chart-line"></i> <span>Analytics</span></a></li>
+            <li><a href="/messages"><i class="fas fa-envelope"></i> <span>Messages</span></a></li>
+            <li><a href="/groups"><i class="fas fa-users"></i> <span>Groups</span></a></li>
+            <li><a href="/settings"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            <li><a href="/logout" style="color: #fc8181;"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2>My Capsules</h2>
+                    <p>Manage and track your time capsules</p>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Capsule
+                </button>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="search-bar">
+            <input type="text" placeholder="Search capsules...">
+            <i class="fas fa-search"></i>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Scheduled</button>
+            <button class="filter-btn">Delivered</button>
+            <button class="filter-btn">Drafts</button>
+        </div>
+
+        <!-- Capsules Grid -->
+        <div class="capsule-grid">
+            <!-- Capsule Card 1 -->
+            <div class="capsule-card">
+                <div class="capsule-header">
+                    <h3 class="capsule-title">Birthday Memories 2024</h3>
+                    <span class="capsule-status status-scheduled">Scheduled</span>
+                </div>
+                <p class="capsule-info">A collection of birthday wishes and memories to be opened next year.</p>
+                <div class="capsule-meta">
+                    <span><i class="far fa-calendar"></i> Delivery: Jan 15, 2024</span>
+                    <span><i class="far fa-file"></i> 5 items</span>
+                </div>
+                <div class="capsule-actions">
+                    <button class="btn btn-outline"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-outline"><i class="fas fa-eye"></i> Preview</button>
+                </div>
+            </div>
+
+            <!-- Capsule Card 2 -->
+            <div class="capsule-card">
+                <div class="capsule-header">
+                    <h3 class="capsule-title">Graduation Letter</h3>
+                    <span class="capsule-status status-delivered">Delivered</span>
+                </div>
+                <p class="capsule-info">A letter to myself on graduation day.</p>
+                <div class="capsule-meta">
+                    <span><i class="far fa-calendar"></i> Delivered: Dec 1, 2023</span>
+                    <span><i class="far fa-file"></i> 1 item</span>
+                </div>
+                <div class="capsule-actions">
+                    <button class="btn btn-outline"><i class="fas fa-eye"></i> View</button>
+                </div>
+            </div>
+
+            <!-- Capsule Card 3 -->
+            <div class="capsule-card">
+                <div class="capsule-header">
+                    <h3 class="capsule-title">New Year Resolutions</h3>
+                    <span class="capsule-status status-draft">Draft</span>
+                </div>
+                <p class="capsule-info">My goals and aspirations for the upcoming year.</p>
+                <div class="capsule-meta">
+                    <span><i class="far fa-calendar"></i> Not scheduled</span>
+                    <span><i class="far fa-file"></i> 2 items</span>
+                </div>
+                <div class="capsule-actions">
+                    <button class="btn btn-outline"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-outline"><i class="fas fa-trash-alt"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click handlers for filter buttons
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelector('.filter-btn.active').classList.remove('active');
+                button.classList.add('active');
+                // Add filter functionality here
+            });
+        });
+    </script>
+</body>
+</html> 

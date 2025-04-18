@@ -41,6 +41,7 @@
             <input type="checkbox" id="remember" name="remember">
             <label for="remember">Keep me logged in</label>
         </div>
+        <div id="error-message" class="error-message" style="display: none; color: #ff0000; margin-bottom: 1rem; text-align: center;"></div>
         <div class="form-buttons">
             <button type="submit" class="cta-button">Login</button>
             <a href="/signup" class="secondary-button">Create New Account</a>
@@ -72,6 +73,9 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.style.display = 'none';
+
         const formData = {
             email: document.getElementById('email').value,
             password: document.getElementById('password').value
@@ -83,27 +87,23 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(formData),
+                credentials: 'include' // This is important for cookies
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Store user data in localStorage
-                localStorage.setItem('user', JSON.stringify({
-                    _id: data.user._id,
-                    username: data.user.username,
-                    email: data.user.email
-                }));
-                
                 // Redirect to dashboard
                 window.location.href = '/dashboard';
             } else {
-                alert(data.error || 'Login failed. Please try again.');
+                errorMessage.textContent = data.error || 'Login failed. Please try again.';
+                errorMessage.style.display = 'block';
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred. Please try again later.');
+            errorMessage.textContent = 'An error occurred. Please try again later.';
+            errorMessage.style.display = 'block';
         }
     });
 

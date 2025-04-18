@@ -37,6 +37,14 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'login.html'));
 });
 
+app.get('/forgot-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'forgot-password.html'));
+});
+
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'reset-password.html'));
+});
+
 app.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'signup.html'));
 });
@@ -47,6 +55,30 @@ app.get('/features', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Html', 'dashboard.html'));
+});
+
+app.get('/my-capsules', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'my-capsules.html'));
+});
+
+app.get('/schedule', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'schedule.html'));
+});
+
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'analytics.html'));
+});
+
+app.get('/messages', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'messages.html'));
+});
+
+app.get('/groups', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'groups.html'));
+});
+
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'Html', 'settings.html'));
 });
 
 app.get('/capsules-view', (req, res) => {

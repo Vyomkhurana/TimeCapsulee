@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - TimeCapsule</title>
+    <link rel="stylesheet" href="/stylesheets/dashboard-common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: #38a169;
+        }
+
+        .stat-change.negative {
+            color: #e53e3e;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .activity-list {
+            margin-top: 20px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--content-bg);
+            color: var(--primary-color);
+        }
+
+        .activity-details h4 {
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .activity-details p {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1><i class="fas fa-hourglass-half"></i> <span>TimeCapsule</span></h1>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="/my-capsules"><i class="fas fa-box-archive"></i> <span>My Capsules</span></a></li>
+            <li><a href="/schedule"><i class="fas fa-calendar"></i> <span>Schedule</span></a></li>
+            <li><a href="/analytics" class="active"><i class="fas fa-chart-line"></i> <span>Analytics</span></a></li>
+            <li><a href="/messages"><i class="fas fa-envelope"></i> <span>Messages</span></a></li>
+            <li><a href="/groups"><i class="fas fa-users"></i> <span>Groups</span></a></li>
+            <li><a href="/settings"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            <li><a href="/logout" style="color: #fc8181;"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2>Analytics</h2>
+                    <p>Track your capsule statistics and activity</p>
+                </div>
+                <div class="flex gap-10">
+                    <button class="btn btn-outline" id="exportBtn">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Capsules</h3>
+                <div class="stat-value" id="totalCapsules">-</div>
+                <div class="stat-change" id="totalCapsulesChange">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Scheduled Deliveries</h3>
+                <div class="stat-value" id="scheduledCapsules">-</div>
+                <div class="stat-change" id="scheduledCapsulesChange">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Delivered Capsules</h3>
+                <div class="stat-value" id="deliveredCapsules">-</div>
+                <div class="stat-change" id="deliveredCapsulesChange">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Categories Used</h3>
+                <div class="stat-value" id="categoriesCount">-</div>
+                <div class="stat-change" id="categoriesCountChange">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Capsule Activity</div>
+                    <div class="chart-filters">
+                        <button class="filter-btn active" data-period="week">Week</button>
+                        <button class="filter-btn" data-period="month">Month</button>
+                        <button class="filter-btn" data-period="year">Year</button>
+                    </div>
+                </div>
+                <canvas id="activityChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">Capsule Categories</div>
+                </div>
+                <canvas id="categoriesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Recent Activity</div>
+            </div>
+            <div class="activity-list" id="recentActivity">
+                <div class="text-center p-20">
+                    <i class="fas fa-spinner fa-spin"></i> Loading recent activity...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication by making an API call
+        async function checkAuth() {
+            try {
+                const response = await fetch('/users/check-auth', {
+                    credentials: 'include' // Important for cookies
+                });
+
+                if (!response.ok) {
+                    const mainContent = document.querySelector('.main-content');
+                    mainContent.innerHTML = `
+                        <div class="page-header">
+                            <h2>Authentication Required</h2>
+                            <p>Please log in to view your analytics</p>
+                        </div>
+                        <div class="text-center p-20">
+                            <a href="/login" class="btn btn-primary">Login</a>
+                        </div>
+                    `;
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                return false;
+            }
+        }
+
+        // Initialize page
+        async function initializePage() {
+            if (!await checkAuth()) return;
+
+            // Initial load
+            fetchStatistics();
+            fetchActivityData('week');
+            fetchCategoriesData();
+            fetchRecentActivity();
+
+            // Refresh data periodically
+            setInterval(fetchStatistics, 300000); // Every 5 minutes
+            setInterval(fetchRecentActivity, 60000); // Every minute
+        }
+
+        // Fetch capsule statistics
+        async function fetchStatistics() {
+            try {
+                const response = await fetch('/api/capsules/statistics', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('Failed to fetch statistics');
+                }
+                
+                const data = await response.json();
+                
+                // Update statistics
+                document.getElementById('totalCapsules').textContent = data.totalCapsules;
+                document.getElementById('scheduledCapsules').textContent = data.scheduledCapsules;
+                document.getElementById('deliveredCapsules').textContent = data.deliveredCapsules;
+                document.getElementById('categoriesCount').textContent = data.uniqueCategories;
+
+                // Update changes
+                updateStatChange('totalCapsulesChange', data.totalCapsulesChange);
+                updateStatChange('scheduledCapsulesChange', data.scheduledCapsulesChange);
+                updateStatChange('deliveredCapsulesChange', data.deliveredCapsulesChange);
+                updateStatChange('categoriesCountChange', data.categoriesChange);
+            } catch (error) {
+                console.error('Error fetching statistics:', error);
+                document.getElementById('totalCapsules').textContent = '0';
+                document.getElementById('scheduledCapsules').textContent = '0';
+                document.getElementById('deliveredCapsules').textContent = '0';
+                document.getElementById('categoriesCount').textContent = '0';
+
+                // Update error states
+                ['totalCapsulesChange', 'scheduledCapsulesChange', 'deliveredCapsulesChange', 'categoriesCountChange'].forEach(id => {
+                    document.getElementById(id).innerHTML = '<span class="text-red-500">No data available</span>';
+                });
+            }
+        }
+
+        // Update stat change display
+        function updateStatChange(elementId, change) {
+            const element = document.getElementById(elementId);
+            if (change > 0) {
+                element.className = 'stat-change positive';
+                element.innerHTML = `<i class="fas fa-arrow-up"></i> ${change}% from last month`;
+            } else if (change < 0) {
+                element.className = 'stat-change negative';
+                element.innerHTML = `<i class="fas fa-arrow-down"></i> ${Math.abs(change)}% from last month`;
+            } else {
+                element.className = 'stat-change';
+                element.innerHTML = 'No change from last month';
+            }
+        }
+
+        // Fetch activity data for the chart
+        async function fetchActivityData(period = 'week') {
+            try {
+                const response = await fetch(`/api/capsules/activity?period=${period}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch activity data');
+                }
+                
+                const data = await response.json();
+                
+                // Update activity chart
+                activityChart.data.labels = data.labels;
+                activityChart.data.datasets[0].data = data.created;
+                activityChart.data.datasets[1].data = data.delivered;
+                activityChart.update();
+            } catch (error) {
+                console.error('Error fetching activity data:', error);
+                activityChart.data.labels = [];
+                activityChart.data.datasets[0].data = [];
+                activityChart.data.datasets[1].data = [];
+                activityChart.update();
+            }
+        }
+
+        // Fetch categories data for the chart
+        async function fetchCategoriesData() {
+            try {
+                const response = await fetch('/api/capsules/categories', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch categories data');
+                }
+                
+                const data = await response.json();
+                
+                // Update categories chart
+                categoriesChart.data.labels = data.labels;
+                categoriesChart.data.datasets[0].data = data.values;
+                categoriesChart.update();
+            } catch (error) {
+                console.error('Error fetching categories data:', error);
+                categoriesChart.data.labels = [];
+                categoriesChart.data.datasets[0].data = [];
+                categoriesChart.update();
+            }
+        }
+
+        // Fetch recent activity
+        async function fetchRecentActivity() {
+            try {
+                const response = await fetch('/api/capsules/recent-activity', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch recent activity');
+                }
+                
+                const activities = await response.json();
+                
+                const activityList = document.getElementById('recentActivity');
+                if (activities.length === 0) {
+                    activityList.innerHTML = '<div class="text-center p-20">No recent activity</div>';
+                    return;
+                }
+
+                activityList.innerHTML = activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas ${getActivityIcon(activity.type)}"></i>
+                        </div>
+                        <div class="activity-details">
+                            <h4>${activity.title}</h4>
+                            <p>${formatActivityTime(activity.timestamp)}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching recent activity:', error);
+                document.getElementById('recentActivity').innerHTML = '<div class="text-center p-20 text-red-500">Failed to load recent activity</div>';
+            }
+        }
+
+        // Helper function to get activity icon
+        function getActivityIcon(type) {
+            const icons = {
+                'created': 'fa-plus',
+                'delivered': 'fa-paper-plane',
+                'scheduled': 'fa-clock',
+                'failed': 'fa-exclamation-circle'
+            };
+            return icons[type] || 'fa-circle';
+        }
+
+        // Helper function to format activity time
+        function formatActivityTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff/60000)} minutes ago`;
+            if (diff < 86400000) return `${Math.floor(diff/3600000)} hours ago`;
+            if (diff < 172800000) return 'Yesterday';
+            return date.toLocaleDateString();
+        }
+
+        // Initialize charts
+        const activityChart = new Chart(document.getElementById('activityChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Created',
+                    data: [],
+                    borderColor: '#4a90e2',
+                    tension: 0.4
+                }, {
+                    label: 'Delivered',
+                    data: [],
+                    borderColor: '#38a169',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        const categoriesChart = new Chart(document.getElementById('categoriesChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        '#4a90e2', // personal
+                        '#38a169', // special
+                        '#805ad5', // academic
+                        '#ed8936', // mental
+                        '#e53e3e', // business
+                        '#667eea', // legacy
+                        '#f6ad55'  // social
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Add click handlers for filter buttons
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelector('.filter-btn.active').classList.remove('active');
+                button.classList.add('active');
+                fetchActivityData(button.dataset.period);
+            });
+        });
+
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/capsules/export-report', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to export report');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `timecapsule-report-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) {
+                console.error('Error exporting report:', error);
+                alert('Failed to export report. Please try again later.');
+            }
+        });
+
+        // Initialize the page
+        initializePage();
+    </script>
+</body>
+</html> 

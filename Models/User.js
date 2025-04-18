@@ -27,6 +27,14 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Terms must be accepted'],
         default: false
     },
+    resetPasswordToken: {
+        type: String,
+        default: null
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: null
+    },
     createdAt: {
         type: Date,
         default: Date.now
