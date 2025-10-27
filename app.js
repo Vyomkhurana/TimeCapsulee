@@ -10,11 +10,20 @@ const cors = require('cors');
 const capsuleRouter = require('./routes/capsules');
 const { startScheduler } = require('./services/scheduler');
 const usersRouter = require('./routes/users');
+const { rateLimiter } = require('./middleware/rateLimiter');
+const { sanitizeInput } = require('./middleware/validation');
 
 const app = express();
 
 // Trust proxy (useful if behind a reverse proxy like nginx)
 app.set('trust proxy', 1);
+
+// Global rate limiter for all routes
+app.use(rateLimiter({ 
+    max: 1000, 
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    message: 'Too many requests from this IP, please try again later.'
+}));
 
 // Enable CORS for all routes
 const corsOptions = {
@@ -25,11 +34,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// Security headers
+// Enhanced Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-Powered-By', 'TimeCapsule'); // Hide Express
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   next();
 });
 
@@ -38,6 +51,9 @@ app.use(logger(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '10mb' })); // Limit JSON payload size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser());
+
+// Input sanitization middleware
+app.use(sanitizeInput);
 
 // Static files with caching
 app.use(express.static(path.join(__dirname, 'public'), {
@@ -54,7 +70,34 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: '2.0.0'
+  });
+});
+
+// API info endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'Time Capsule API',
+    version: '2.0.0',
+    description: 'Digital time capsule application with advanced features',
+    endpoints: {
+      capsules: '/api/capsules',
+      users: '/users',
+      health: '/health'
+    },
+    features: [
+      'Advanced search & filtering',
+      'Capsule sharing',
+      'Tags & categories',
+      'Archive & star',
+      'Bulk operations',
+      'Reminders',
+      'Analytics & reports',
+      'Rate limiting',
+      'Input validation'
+    ]
   });
 });
 

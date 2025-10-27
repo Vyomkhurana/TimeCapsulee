@@ -391,6 +391,324 @@ const exportReport = async (req, res) => {
     }
 };
 
+// NEW: Advanced search with filters
+const searchCapsules = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const { 
+            query, 
+            category, 
+            status, 
+            tags, 
+            priority, 
+            starred, 
+            archived,
+            dateFrom,
+            dateTo,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+            page = 1,
+            limit = 20
+        } = req.query;
+
+        const filter = { creator: userId };
+
+        // Text search
+        if (query) {
+            filter.$text = { $search: query };
+        }
+
+        // Category filter
+        if (category) {
+            filter.category = category;
+        }
+
+        // Status filter
+        if (status) {
+            filter.status = status;
+        }
+
+        // Tags filter
+        if (tags) {
+            const tagArray = tags.split(',').map(tag => tag.trim());
+            filter.tags = { $in: tagArray };
+        }
+
+        // Priority filter
+        if (priority) {
+            filter.priority = priority;
+        }
+
+        // Starred filter
+        if (starred !== undefined) {
+            filter.starred = starred === 'true';
+        }
+
+        // Archived filter
+        if (archived !== undefined) {
+            filter.archived = archived === 'true';
+        } else {
+            // By default, don't show archived capsules
+            filter.archived = false;
+        }
+
+        // Date range filter
+        if (dateFrom || dateTo) {
+            filter.scheduleDate = {};
+            if (dateFrom) filter.scheduleDate.$gte = new Date(dateFrom);
+            if (dateTo) filter.scheduleDate.$lte = new Date(dateTo);
+        }
+
+        // Pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Execute query
+        const capsules = await Capsule.find(filter)
+            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean();
+
+        // Get total count
+        const total = await Capsule.countDocuments(filter);
+
+        res.json({
+            capsules,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Error searching capsules:', error);
+        res.status(500).json({ error: 'Failed to search capsules' });
+    }
+};
+
+// NEW: Share capsule with another user
+const shareCapsule = async (req, res) => {
+    try {
+        const { capsuleId, userEmail, permission = 'view' } = req.body;
+        const User = require('../Models/User');
+
+        // Find the user to share with
+        const sharedUser = await User.findOne({ email: userEmail });
+        if (!sharedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update capsule
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            {
+                $addToSet: {
+                    sharedWith: {
+                        user: sharedUser._id,
+                        permissions: permission,
+                        sharedAt: new Date()
+                    }
+                }
+            },
+            { new: true }
+        );
+
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        res.json({
+            success: true,
+            message: `Capsule shared with ${userEmail}`,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error sharing capsule:', error);
+        res.status(500).json({ error: 'Failed to share capsule' });
+    }
+};
+
+// NEW: Archive/Unarchive capsule
+const toggleArchive = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        capsule.archived = !capsule.archived;
+        await capsule.save();
+
+        res.json({
+            success: true,
+            archived: capsule.archived,
+            message: capsule.archived ? 'Capsule archived' : 'Capsule unarchived'
+        });
+    } catch (error) {
+        console.error('Error toggling archive:', error);
+        res.status(500).json({ error: 'Failed to toggle archive status' });
+    }
+};
+
+// NEW: Toggle starred/favorite
+const toggleStarred = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        capsule.starred = !capsule.starred;
+        await capsule.save();
+
+        res.json({
+            success: true,
+            starred: capsule.starred,
+            message: capsule.starred ? 'Capsule starred' : 'Capsule unstarred'
+        });
+    } catch (error) {
+        console.error('Error toggling starred:', error);
+        res.status(500).json({ error: 'Failed to toggle starred status' });
+    }
+};
+
+// NEW: Bulk delete capsules
+const bulkDelete = async (req, res) => {
+    try {
+        const { capsuleIds } = req.body;
+
+        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {
+            return res.status(400).json({ error: 'Invalid capsule IDs' });
+        }
+
+        const result = await Capsule.deleteMany({
+            _id: { $in: capsuleIds }
+        });
+
+        res.json({
+            success: true,
+            deletedCount: result.deletedCount,
+            message: `${result.deletedCount} capsule(s) deleted`
+        });
+    } catch (error) {
+        console.error('Error bulk deleting capsules:', error);
+        res.status(500).json({ error: 'Failed to delete capsules' });
+    }
+};
+
+// NEW: Bulk archive capsules
+const bulkArchive = async (req, res) => {
+    try {
+        const { capsuleIds, archive = true } = req.body;
+
+        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {
+            return res.status(400).json({ error: 'Invalid capsule IDs' });
+        }
+
+        const result = await Capsule.updateMany(
+            { _id: { $in: capsuleIds } },
+            { $set: { archived: archive } }
+        );
+
+        res.json({
+            success: true,
+            modifiedCount: result.modifiedCount,
+            message: `${result.modifiedCount} capsule(s) ${archive ? 'archived' : 'unarchived'}`
+        });
+    } catch (error) {
+        console.error('Error bulk archiving capsules:', error);
+        res.status(500).json({ error: 'Failed to archive capsules' });
+    }
+};
+
+// NEW: Update capsule tags
+const updateTags = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { tags } = req.body;
+
+        if (!Array.isArray(tags)) {
+            return res.status(400).json({ error: 'Tags must be an array' });
+        }
+
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            { $set: { tags: tags.map(tag => tag.toLowerCase().trim()) } },
+            { new: true }
+        );
+
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        res.json({
+            success: true,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error updating tags:', error);
+        res.status(500).json({ error: 'Failed to update tags' });
+    }
+};
+
+// NEW: Get all unique tags
+const getAllTags = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        
+        const tags = await Capsule.aggregate([
+            { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+            { $unwind: '$tags' },
+            { $group: { _id: '$tags', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 50 }
+        ]);
+
+        res.json({
+            tags: tags.map(t => ({ tag: t._id, count: t.count }))
+        });
+    } catch (error) {
+        console.error('Error fetching tags:', error);
+        res.status(500).json({ error: 'Failed to fetch tags' });
+    }
+};
+
+// NEW: Update reminder settings
+const updateReminder = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { enabled, daysBeforeDelivery } = req.body;
+
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            {
+                $set: {
+                    'reminder.enabled': enabled,
+                    'reminder.daysBeforeDelivery': daysBeforeDelivery || 1
+                }
+            },
+            { new: true }
+        );
+
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        res.json({
+            success: true,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error updating reminder:', error);
+        res.status(500).json({ error: 'Failed to update reminder' });
+    }
+};
+
 module.exports = {
     createCapsule,
     getMyCapsules,
@@ -400,5 +718,15 @@ module.exports = {
     getActivity,
     getCategories,
     getRecentActivity,
-    exportReport
+    exportReport,
+    // NEW POWERFUL FEATURES
+    searchCapsules,
+    shareCapsule,
+    toggleArchive,
+    toggleStarred,
+    bulkDelete,
+    bulkArchive,
+    updateTags,
+    getAllTags,
+    updateReminder
 };
