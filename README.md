@@ -1,33 +1,107 @@
-# 🕰️ Time Capsule
+# 🕰️ Time Capsule v2.0
 
-A modern, secure web application that allows users to create digital time capsules and schedule them for future delivery via email.
+A powerful, feature-rich web application that allows users to create digital time capsules and schedule them for future delivery via email. Now with advanced search, sharing, templates, analytics, and much more!
 
-## ✨ Features
+## ✨ Core Features
 
+### 📦 Capsule Management
 - 📝 Create time capsules with messages, files, and media
 - ⏰ Schedule capsules for future delivery
 - 🏷️ Categorize capsules (personal, special, academic, mental, business, legacy, social)
-- 📧 Automated email delivery on scheduled dates
-- 📊 Dashboard with category-wise organization
-- 🔐 Secure user authentication with JWT
-- 📁 File upload support (up to 10MB)
-- 🚀 Performance optimized with database indexing
-- 💾 Automatic session management
-- 🔒 Security headers and input validation
+- 📧 Automated email delivery with beautiful HTML templates
+- 📁 File upload support (up to 10MB, multiple file types)
+- � Duplicate/clone existing capsules
+- ⭐ Star/favorite important capsules
+- 📦 Archive capsules for better organization
+
+### 🔍 Advanced Search & Filtering
+- 🔎 Full-text search across titles, messages, and tags
+- 🏷️ Filter by category, status, priority, and tags
+- 📅 Date range filtering
+- ⭐ Filter by starred or archived status
+- 📊 Pagination with customizable page sizes
+- 🔀 Sort by multiple criteria
+
+### 🤝 Sharing & Collaboration
+- � Share capsules with other users
+- 🔐 Permission-based access (view/edit)
+- 📧 Email notifications for shared capsules
+- 👥 See who you've shared with
+
+### 🏷️ Tags System
+- 🏷️ Add multiple tags to capsules
+- � View all tags with usage counts
+- 🔍 Search by tags
+- 💡 Popular tags suggestions
+
+### 🔔 Smart Reminders
+- ⏰ Set reminder notifications before delivery
+- 📧 Beautiful countdown email templates
+- ⚙️ Configurable reminder timing (1-365 days before)
+- � Track sent reminders
+
+### 📋 Templates
+- 📑 Create reusable capsule templates
+- 🌍 Public and private templates
+- 📊 Track template usage
+- ⚡ Quick capsule creation from templates
+
+### 🎯 Priority System
+- 🔥 Urgent, High, Medium, Low priorities
+- 🎨 Visual priority indicators
+- 📊 Filter by priority
+
+### 📊 Advanced Analytics
+- 📈 Comprehensive dashboard statistics
+- 📊 Category distribution charts
+- 📉 Monthly trend analysis
+- 🎯 Delivery success rate
+- 🏆 Top tags insights
+- � Activity timeline
+- 📊 Priority distribution
+
+### 🔧 Bulk Operations
+- ✅ Bulk delete multiple capsules
+- 📦 Bulk archive/unarchive
+- ⚡ Efficient batch processing
+
+### 💾 Backup & Export
+- 📥 Export all capsules as JSON backup
+- 📊 Export analytics reports as CSV
+- 💾 Complete data portability
+
+### 🔐 Security Features
+- 🛡️ Rate limiting (global + per-endpoint)
+- 🔒 Input validation & sanitization
+- 🚫 XSS protection
+- 🔐 SQL injection prevention
+- 🛡️ Enhanced security headers (HSTS, CSP, etc.)
+- 📝 Activity logging
+- 🔑 JWT authentication
+- 🔐 Bcrypt password hashing
+
+### ⚡ Performance Optimizations
+- 🚀 Database indexing (compound & text indexes)
+- 💾 Static file caching
+- 📦 Response compression ready
+- 🎯 Optimized queries with aggregation pipelines
+- 📊 Lean queries for better performance
 
 ## 🛠️ Tech Stack
 
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: JWT, bcrypt
-- **Email**: Nodemailer
-- **Scheduler**: node-cron
+- **Email**: Nodemailer with HTML templates
+- **Scheduler**: node-cron (delivery + reminders)
 - **Frontend**: HTML/CSS/JavaScript
+- **Security**: Helmet, rate limiting, input validation
+- **Logging**: Activity logging system
 
-## Prerequisites
+## 📋 Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB
+- MongoDB (v4.4 or higher)
 - Gmail account (for email delivery)
 
 ## 🚀 Installation

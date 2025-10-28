@@ -2,6 +2,8 @@ const Capsule = require('../Models/Capsule');
 const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
+const { logActivity } = require('../utils/activityLogger');
+const Template = require('../Models/Template');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -47,6 +49,16 @@ const createCapsule = async (req, res) => {
                 files: files || [],
                 scheduleDate,
                 creator: new mongoose.Types.ObjectId(creator) // Convert string ID to ObjectId
+            });
+
+            // Log activity
+            await logActivity({
+                userId: creator,
+                action: 'capsule_created',
+                entityType: 'capsule',
+                entityId: capsule._id,
+                details: { title, category },
+                req
             });
 
             res.status(201).json({
@@ -709,6 +721,283 @@ const updateReminder = async (req, res) => {
     }
 };
 
+// NEW: Duplicate/Clone capsule
+const duplicateCapsule = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { scheduleDate } = req.body;
+
+        const originalCapsule = await Capsule.findById(capsuleId);
+        if (!originalCapsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        // Create duplicate
+        const duplicatedCapsule = await Capsule.create({
+            title: `${originalCapsule.title} (Copy)`,
+            message: originalCapsule.message,
+            category: originalCapsule.category,
+            tags: originalCapsule.tags,
+            priority: originalCapsule.priority,
+            files: originalCapsule.files,
+            scheduleDate: scheduleDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            creator: originalCapsule.creator
+        });
+
+        await logActivity({
+            userId: originalCapsule.creator,
+            action: 'capsule_created',
+            entityType: 'capsule',
+            entityId: duplicatedCapsule._id,
+            details: { duplicatedFrom: capsuleId },
+            req
+        });
+
+        res.json({
+            success: true,
+            capsule: duplicatedCapsule,
+            message: 'Capsule duplicated successfully'
+        });
+    } catch (error) {
+        console.error('Error duplicating capsule:', error);
+        res.status(500).json({ error: 'Failed to duplicate capsule' });
+    }
+};
+
+// NEW: Get capsule templates
+const getTemplates = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        
+        // Get both user's templates and public templates
+        const templates = await Template.find({
+            $or: [
+                { creator: userId },
+                { isPublic: true }
+            ]
+        }).sort({ usageCount: -1, createdAt: -1 });
+
+        res.json({ templates });
+    } catch (error) {
+        console.error('Error fetching templates:', error);
+        res.status(500).json({ error: 'Failed to fetch templates' });
+    }
+};
+
+// NEW: Create template from capsule
+const createTemplate = async (req, res) => {
+    try {
+        const { capsuleId, name, description, isPublic } = req.body;
+        
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+
+        const template = await Template.create({
+            name,
+            description,
+            category: capsule.category,
+            messageTemplate: capsule.message,
+            tags: capsule.tags,
+            priority: capsule.priority,
+            isPublic: isPublic || false,
+            creator: capsule.creator
+        });
+
+        res.json({
+            success: true,
+            template,
+            message: 'Template created successfully'
+        });
+    } catch (error) {
+        console.error('Error creating template:', error);
+        res.status(500).json({ error: 'Failed to create template' });
+    }
+};
+
+// NEW: Create capsule from template
+const createFromTemplate = async (req, res) => {
+    try {
+        const { templateId, title, scheduleDate, customMessage } = req.body;
+        const userId = req.query.userId;
+
+        const template = await Template.findById(templateId);
+        if (!template) {
+            return res.status(404).json({ error: 'Template not found' });
+        }
+
+        // Create capsule from template
+        const capsule = await Capsule.create({
+            title: title || `Capsule from ${template.name}`,
+            message: customMessage || template.messageTemplate,
+            category: template.category,
+            tags: template.tags,
+            priority: template.priority,
+            scheduleDate,
+            creator: userId
+        });
+
+        // Increment template usage count
+        template.usageCount += 1;
+        await template.save();
+
+        await logActivity({
+            userId,
+            action: 'capsule_created',
+            entityType: 'capsule',
+            entityId: capsule._id,
+            details: { fromTemplate: templateId },
+            req
+        });
+
+        res.json({
+            success: true,
+            capsule,
+            message: 'Capsule created from template'
+        });
+    } catch (error) {
+        console.error('Error creating from template:', error);
+        res.status(500).json({ error: 'Failed to create from template' });
+    }
+};
+
+// NEW: Backup user capsules
+const backupCapsules = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+
+        const capsules = await Capsule.find({ creator: userId }).lean();
+
+        const backup = {
+            exportDate: new Date().toISOString(),
+            totalCapsules: capsules.length,
+            user: userId,
+            capsules: capsules.map(c => ({
+                title: c.title,
+                message: c.message,
+                category: c.category,
+                tags: c.tags,
+                priority: c.priority,
+                status: c.status,
+                scheduleDate: c.scheduleDate,
+                createdAt: c.createdAt,
+                starred: c.starred,
+                archived: c.archived
+            }))
+        };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename=timecapsule-backup-${new Date().toISOString().split('T')[0]}.json`);
+        res.send(JSON.stringify(backup, null, 2));
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        res.status(500).json({ error: 'Failed to create backup' });
+    }
+};
+
+// NEW: Advanced analytics
+const getAdvancedAnalytics = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+
+        const [
+            totalStats,
+            categoryDistribution,
+            priorityDistribution,
+            deliveryRate,
+            topTags,
+            monthlyTrend
+        ] = await Promise.all([
+            // Total statistics
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+                        delivered: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },
+                        failed: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },
+                        starred: { $sum: { $cond: ['$starred', 1, 0] } },
+                        archived: { $sum: { $cond: ['$archived', 1, 0] } }
+                    }
+                }
+            ]),
+
+            // Category distribution
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $group: { _id: '$category', count: { $sum: 1 } } },
+                { $sort: { count: -1 } }
+            ]),
+
+            // Priority distribution
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $group: { _id: '$priority', count: { $sum: 1 } } }
+            ]),
+
+            // Delivery success rate
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId), status: { $in: ['delivered', 'failed'] } } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        successful: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } }
+                    }
+                }
+            ]),
+
+            // Top tags
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $unwind: '$tags' },
+                { $group: { _id: '$tags', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
+            ]),
+
+            // Monthly trend (last 6 months)
+            Capsule.aggregate([
+                {
+                    $match: {
+                        creator: new mongoose.Types.ObjectId(userId),
+                        createdAt: { $gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' }
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ])
+        ]);
+
+        const deliverySuccessRate = deliveryRate[0]
+            ? Math.round((deliveryRate[0].successful / deliveryRate[0].total) * 100)
+            : 0;
+
+        res.json({
+            overview: totalStats[0] || {},
+            categoryDistribution,
+            priorityDistribution,
+            deliverySuccessRate,
+            topTags,
+            monthlyTrend
+        });
+    } catch (error) {
+        console.error('Error fetching advanced analytics:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+};
+
 module.exports = {
     createCapsule,
     getMyCapsules,
@@ -728,5 +1017,12 @@ module.exports = {
     bulkArchive,
     updateTags,
     getAllTags,
-    updateReminder
+    updateReminder,
+    // NEWEST FEATURES
+    duplicateCapsule,
+    getTemplates,
+    createTemplate,
+    createFromTemplate,
+    backupCapsules,
+    getAdvancedAnalytics
 };

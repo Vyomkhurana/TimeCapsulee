@@ -19,7 +19,14 @@ const {
     bulkArchive,
     updateTags,
     getAllTags,
-    updateReminder
+    updateReminder,
+    // NEWEST FEATURES
+    duplicateCapsule,
+    getTemplates,
+    createTemplate,
+    createFromTemplate,
+    backupCapsules,
+    getAdvancedAnalytics
 } = require('../Controllers/Capsule');
 
 const { validateCapsule } = require('../middleware/validation');
@@ -59,5 +66,17 @@ router.get('/tags/all', getAllTags);
 
 // NEW: Reminder management
 router.patch('/:capsuleId/reminder', updateReminder);
+
+// NEWEST: Duplicate/Clone capsule
+router.post('/:capsuleId/duplicate', duplicateCapsule);
+
+// NEWEST: Templates
+router.get('/templates/all', getTemplates);
+router.post('/templates/create', createTemplate);
+router.post('/templates/use', createFromTemplate);
+
+// NEWEST: Backup & Advanced Analytics
+router.get('/backup/export', backupCapsules);
+router.get('/analytics/advanced', getAdvancedAnalytics);
 
 module.exports = router;

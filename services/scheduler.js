@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const Capsule = require('../Models/Capsule');
 const { sendEmail } = require('../config/email');
+const { getDeliveryEmailTemplate, getReminderEmailTemplate } = require('../utils/emailTemplates');
 
 const startScheduler = () => {
     // Check for capsules to be delivered every minute
@@ -50,28 +51,13 @@ const startScheduler = () => {
                         continue;
                     }
 
-                    // Generate capsule link
-                    const capsuleLink = `${process.env.BASE_URL}/capsule/${capsule._id}`;
-                    console.log('Generated capsule link:', capsuleLink);
-                    
-                    // Send email with capsule content and link
+                    // Send email with enhanced template
+                    const emailTemplate = getDeliveryEmailTemplate(capsule, capsule.creator);
                     await sendEmail({
                         to: capsule.creator.email,
-                        subject: `Your Time Capsule: ${capsule.title}`,
-                        html: `
-                            <h1>Your Time Capsule Has Arrived!</h1>
-                            <h2>${capsule.title}</h2>
-                            <p>Message: ${capsule.message}</p>
-                            <p>Created on: ${capsule.createdAt.toLocaleDateString()}</p>
-                            <p>Category: ${capsule.category}</p>
-                            <p>View your capsule here: <a href="${capsuleLink}">${capsuleLink}</a></p>
-                            ${capsule.files && capsule.files.length > 0 ? `
-                                <h3>Attached Files:</h3>
-                                <ul>
-                                    ${capsule.files.map(file => `<li>${file.filename}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                        `
+                        subject: emailTemplate.subject,
+                        html: emailTemplate.html,
+                        text: emailTemplate.text
                     });
 
                     // Update capsule status
@@ -93,7 +79,41 @@ const startScheduler = () => {
         }
     });
 
-    console.log('✨ Scheduler started successfully');
+    // NEW: Check for capsules needing reminders every hour
+    cron.schedule('0 * * * *', async () => {
+        try {
+            console.log('\n--- Checking for reminder notifications ---');
+            const capsulesNeedingReminders = await Capsule.findNeedingReminders();
+
+            for (const capsule of capsulesNeedingReminders) {
+                try {
+                    if (capsule.shouldSendReminder()) {
+                        const daysUntil = Math.ceil((capsule.scheduleDate - new Date()) / (1000 * 60 * 60 * 24));
+                        
+                        const emailTemplate = getReminderEmailTemplate(capsule, capsule.creator, daysUntil);
+                        await sendEmail({
+                            to: capsule.creator.email,
+                            subject: emailTemplate.subject,
+                            html: emailTemplate.html,
+                            text: emailTemplate.text
+                        });
+
+                        // Mark reminder as sent
+                        capsule.reminder.sent = true;
+                        await capsule.save();
+
+                        console.log(`✅ Reminder sent for capsule: ${capsule._id}`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Failed to send reminder for capsule ${capsule._id}:`, error);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Reminder scheduler error:', error);
+        }
+    });
+
+    console.log('✨ Scheduler started successfully (delivery + reminders)');
 };
 
 module.exports = { startScheduler };
