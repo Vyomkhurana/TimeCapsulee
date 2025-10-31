@@ -5,7 +5,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const fs = require('fs');
-const mongoose = require('./db'); // MongoDB connection
+const db = require('./db'); // MongoDB connection helper
 const cors = require('cors');
 const capsuleRouter = require('./routes/capsules');
 const { startScheduler } = require('./services/scheduler');
@@ -180,6 +180,14 @@ app.use((err, req, res, next) => {
 // Start the scheduler
 console.log('🚀 Starting scheduler...');
 startScheduler();
+
+// Log DB connection state for diagnostics (non-blocking)
+try {
+  const connected = typeof db.isConnected === 'function' ? db.isConnected() : false;
+  console.log(`MongoDB connected: ${connected}`);
+} catch (e) {
+  console.warn('Could not determine MongoDB connection state', e && e.message ? e.message : e);
+}
 
 // Start the server
 const PORT = process.env.PORT || 3000;
