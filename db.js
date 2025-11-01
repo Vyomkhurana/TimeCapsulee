@@ -9,14 +9,13 @@ const RETRY_MAX_MS = parseInt(process.env.MONGO_RETRY_MAX_MS, 10) || 5 * 60 * 10
 
 // Connection options for better performance and stability
 const options = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     maxPoolSize: 10, // Maintain up to 10 socket connections
     serverSelectionTimeoutMS: 5000, // Try selecting a server for 5s
     socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    family: 4 // Use IPv4, skip trying IPv6
 };
 
-// Ensure mongoose won't throw on deprecated options and configure strictQuery
+// Configure strictQuery to suppress warnings
 mongoose.set('strictQuery', false);
 
 let connectAttempt = 0;

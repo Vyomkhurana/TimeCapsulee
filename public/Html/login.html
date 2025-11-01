@@ -1,169 +1,335 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Time Capsule</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../stylesheets/style.css">
-    <link rel="stylesheet" href="../stylesheets/animations.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<!DOCTYPE html><!DOCTYPE html>
+
+<html lang="en"><html lang="en">
+
+<head><head>
+
+    <meta charset="UTF-8">    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login - TimeCapsule</title>    <title>Login - Time Capsule</title>
+
+    <link rel="stylesheet" href="/stylesheets/modern-auth.css">    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+</head>    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<body>    <link rel="stylesheet" href="../stylesheets/style.css">
+
+    <!-- Animated Background -->    <link rel="stylesheet" href="../stylesheets/animations.css">
+
+    <div class="animated-bg">    <style>
+
+        <div class="gradient-orb orb-1"></div>        * {
+
+        <div class="gradient-orb orb-2"></div>            margin: 0;
+
+        <div class="gradient-orb orb-3"></div>            padding: 0;
+
+    </div>            box-sizing: border-box;
+
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+    <!-- Back to Home -->
+
+    <a href="/" class="back-home">        body {
+
+        <i class="fas fa-arrow-left"></i>            font-family: 'Inter', sans-serif;
+
+        <span>Back to Home</span>            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    </a>            min-height: 100vh;
+
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
 
-        /* Animated Background Particles */
-        .particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 0;
-        }
+    <!-- Main Container -->            align-items: center;
 
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 15s infinite ease-in-out;
-        }
+    <div class="auth-container">            justify-content: center;
 
-        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 2s; }
+        <div class="auth-box">            padding: 20px;
+
+            <!-- Left Side - Branding -->            position: relative;
+
+            <div class="auth-branding">            overflow: hidden;
+
+                <div class="brand-content">        }
+
+                    <div class="logo">
+
+                        <i class="fas fa-hourglass-half"></i>        /* Animated Background Particles */
+
+                        <span>Time<span class="highlight">Capsule</span></span>        .particles {
+
+                    </div>            position: absolute;
+
+                    <h2>Welcome Back!</h2>            top: 0;
+
+                    <p>Sign in to access your time capsules and continue preserving your memories.</p>            left: 0;
+
+                                width: 100%;
+
+                    <div class="features-list">            height: 100%;
+
+                        <div class="feature-item">            overflow: hidden;
+
+                            <i class="fas fa-check-circle"></i>            z-index: 0;
+
+                            <span>Secure & Encrypted</span>        }
+
+                        </div>
+
+                        <div class="feature-item">        .particle {
+
+                            <i class="fas fa-check-circle"></i>            position: absolute;
+
+                            <span>Easy to Use</span>            background: rgba(255, 255, 255, 0.1);
+
+                        </div>            border-radius: 50%;
+
+                        <div class="feature-item">            animation: float 15s infinite ease-in-out;
+
+                            <i class="fas fa-check-circle"></i>        }
+
+                            <span>Reliable Delivery</span>
+
+                        </div>        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+
+                    </div>        .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 2s; }
+
         .particle:nth-child(3) { width: 100px; height: 100px; left: 35%; animation-delay: 4s; }
-        .particle:nth-child(4) { width: 50px; height: 50px; left: 50%; animation-delay: 6s; }
-        .particle:nth-child(5) { width: 70px; height: 70px; left: 65%; animation-delay: 8s; }
-        .particle:nth-child(6) { width: 90px; height: 90px; left: 80%; animation-delay: 10s; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
-            50% { transform: translateY(-100px) rotate(180deg); opacity: 0.6; }
-        }
+                    <div class="testimonial">        .particle:nth-child(4) { width: 50px; height: 50px; left: 50%; animation-delay: 6s; }
 
-        /* Login Container */
-        .login-container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 460px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                        <div class="testimonial-stars">        .particle:nth-child(5) { width: 70px; height: 70px; left: 65%; animation-delay: 8s; }
+
+                            <i class="fas fa-star"></i>        .particle:nth-child(6) { width: 90px; height: 90px; left: 80%; animation-delay: 10s; }
+
+                            <i class="fas fa-star"></i>
+
+                            <i class="fas fa-star"></i>        @keyframes float {
+
+                            <i class="fas fa-star"></i>            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+
+                            <i class="fas fa-star"></i>            50% { transform: translateY(-100px) rotate(180deg); opacity: 0.6; }
+
+                        </div>        }
+
+                        <p>"TimeCapsule changed the way I preserve memories. It's simply amazing!"</p>
+
+                        <div class="testimonial-author">        /* Login Container */
+
+                            <img src="https://i.pravatar.cc/60?img=1" alt="User">        .login-container {
+
+                            <div>            position: relative;
+
+                                <strong>Sarah Johnson</strong>            z-index: 1;
+
+                                <span>Verified User</span>            width: 100%;
+
+                            </div>            max-width: 460px;
+
+                        </div>            background: rgba(255, 255, 255, 0.98);
+
+                    </div>            backdrop-filter: blur(20px);
+
+                </div>            border-radius: 24px;
+
+            </div>            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
             padding: 48px 40px;
-            animation: slideUp 0.6s ease-out;
-        }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
+            <!-- Right Side - Login Form -->            animation: slideUp 0.6s ease-out;
+
+            <div class="auth-form-container">        }
+
+                <div class="form-header">
+
+                    <h1>Sign In</h1>        @keyframes slideUp {
+
+                    <p>Don't have an account? <a href="/signup" class="link-primary">Sign up</a></p>            from {
+
+                </div>                opacity: 0;
+
                 transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+
+                <!-- Social Login -->            }
+
+                <div class="social-login">            to {
+
+                    <button class="btn-social btn-google">                opacity: 1;
+
+                        <i class="fab fa-google"></i>                transform: translateY(0);
+
+                        <span>Continue with Google</span>            }
+
+                    </button>        }
+
+                    <button class="btn-social btn-github">
+
+                        <i class="fab fa-github"></i>        /* Logo */
+
+                        <span>Continue with GitHub</span>        .logo {
+
+                    </button>            text-align: center;
+
+                </div>            margin-bottom: 32px;
+
         }
 
-        /* Logo */
-        .logo {
-            text-align: center;
-            margin-bottom: 32px;
-        }
+                <div class="divider">
 
-        .logo-icon {
-            width: 64px;
+                    <span>Or continue with email</span>        .logo-icon {
+
+                </div>            width: 64px;
+
             height: 64px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
+
+                <!-- Login Form -->            background: linear-gradient(135deg, #667eea, #764ba2);
+
+                <form id="loginForm" class="auth-form">            border-radius: 16px;
+
+                    <div class="alert alert-error" id="errorAlert" style="display: none;">            display: inline-flex;
+
+                        <i class="fas fa-exclamation-circle"></i>            align-items: center;
+
+                        <span id="errorMessage"></span>            justify-content: center;
+
+                    </div>            margin-bottom: 16px;
+
             animation: pulse 2s ease-in-out infinite;
+
+                    <div class="form-group">        }
+
+                        <label for="email">
+
+                            <i class="fas fa-envelope"></i>        .logo-icon i {
+
+                            Email Address            font-size: 32px;
+
+                        </label>            color: white;
+
+                        <input         }
+
+                            type="email" 
+
+                            id="email"         .logo h1 {
+
+                            name="email"             font-family: 'Playfair Display', serif;
+
+                            placeholder="Enter your email"            font-size: 32px;
+
+                            required            font-weight: 700;
+
+                            autocomplete="email"            background: linear-gradient(135deg, #667eea, #764ba2);
+
+                        >            -webkit-background-clip: text;
+
+                        <span class="error-text" id="emailError"></span>            -webkit-text-fill-color: transparent;
+
+                    </div>            margin-bottom: 8px;
+
         }
 
-        .logo-icon i {
-            font-size: 32px;
-            color: white;
-        }
+                    <div class="form-group">
 
-        .logo h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
+                        <label for="password">        .logo p {
 
-        .logo p {
-            color: #64748b;
-            font-size: 15px;
-        }
+                            <i class="fas fa-lock"></i>            color: #64748b;
 
-        /* Form */
-        .login-form {
-            margin-top: 32px;
-        }
+                            Password            font-size: 15px;
 
-        .form-group {
-            margin-bottom: 24px;
-            animation: fadeIn 0.6s ease-out backwards;
-        }
+                        </label>        }
 
-        .form-group:nth-child(1) { animation-delay: 0.1s; }
-        .form-group:nth-child(2) { animation-delay: 0.2s; }
-        .form-group:nth-child(3) { animation-delay: 0.3s; }
+                        <div class="password-input">
+
+                            <input         /* Form */
+
+                                type="password"         .login-form {
+
+                                id="password"             margin-top: 32px;
+
+                                name="password"         }
+
+                                placeholder="Enter your password"
+
+                                required        .form-group {
+
+                                autocomplete="current-password"            margin-bottom: 24px;
+
+                            >            animation: fadeIn 0.6s ease-out backwards;
+
+                            <button type="button" class="toggle-password" id="togglePassword">        }
+
+                                <i class="fas fa-eye"></i>
+
+                            </button>        .form-group:nth-child(1) { animation-delay: 0.1s; }
+
+                        </div>        .form-group:nth-child(2) { animation-delay: 0.2s; }
+
+                        <span class="error-text" id="passwordError"></span>        .form-group:nth-child(3) { animation-delay: 0.3s; }
+
+                    </div>
 
         .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #334155;
-        }
 
-        .input-wrapper {
+                    <div class="form-options">            display: block;
+
+                        <label class="checkbox-container">            margin-bottom: 8px;
+
+                            <input type="checkbox" id="rememberMe" name="rememberMe">            font-size: 14px;
+
+                            <span class="checkmark"></span>            font-weight: 500;
+
+                            <span>Remember me</span>            color: #334155;
+
+                        </label>        }
+
+                        <a href="/forgot-password" class="link-primary">Forgot password?</a>
+
+                    </div>        .input-wrapper {
+
             position: relative;
-        }
 
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="loginBtn">        }
+
+                        <span class="btn-text">Sign In</span>
+
+                        <span class="btn-loader" style="display: none;">        .input-icon {
+
+                            <i class="fas fa-spinner fa-spin"></i>            position: absolute;
+
+                        </span>            left: 16px;
+
+                    </button>            top: 50%;
+
+                </form>            transform: translateY(-50%);
+
             color: #94a3b8;
-            font-size: 18px;
-            transition: color 0.3s ease;
-        }
 
-        .form-input {
-            width: 100%;
+                <div class="form-footer">            font-size: 18px;
+
+                    <p>By signing in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>            transition: color 0.3s ease;
+
+                </div>        }
+
+            </div>
+
+        </div>        .form-input {
+
+    </div>            width: 100%;
+
             padding: 14px 16px 14px 48px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
+
+    <script src="/javascripts/modern-auth.js"></script>            border: 2px solid #e2e8f0;
+
+</body>            border-radius: 12px;
+
+</html>            font-size: 15px;
+
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
             background: #f8fafc;

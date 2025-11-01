@@ -1,158 +1,542 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time Capsule - Preserve Your Memories</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../stylesheets/index.css">
-</head>
-<body>
-<!-- Header -->
-<header>
-    <div class="container header-content">
-        <a href="/" class="logo">Time Capsule</a>
+<!DOCTYPE html><!DOCTYPE html>
+
+<html lang="en"><html lang="en">
+
+<head><head>
+
+    <meta charset="UTF-8">    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TimeCapsule - Preserve Your Memories for the Future</title>    <title>Time Capsule - Preserve Your Memories</title>
+
+    <link rel="stylesheet" href="/stylesheets/modern-home.css">    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">    <link rel="stylesheet" href="../stylesheets/index.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
+
+</head><body>
+
+<body><!-- Header -->
+
+    <!-- Animated Background --><header>
+
+    <div class="particles-container" id="particles"></div>    <div class="container header-content">
+
+    <div class="gradient-bg"></div>        <a href="/" class="logo">Time Capsule</a>
+
         <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/features">Features</a></li>
-                <li><a href="/how-it-works">How It Works</a></li>
-                <li><a href="/pricing">Pricing</a></li>
-                <li><a href="/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
 
-<!-- Hero Section -->
-<section class="hero">
-    <div class="container">
-        <h1>Preserve Your Moments, Treasure Your Memories</h1>
-        <p>Create digital time capsules to deliver messages, media, and memories to yourself or others at a future date</p>
-        <a href="/login" class="cta-button">Create Your Time Capsule</a>
-    </div>
-</section>
+    <!-- Navigation -->            <ul>
 
-<!-- Features Section -->
-<section class="features">
-    <div class="container">
-        <h2>Features That Matter</h2>
-        <div class="feature-grid">
+    <nav class="navbar" id="navbar">                <li><a href="/">Home</a></li>
+
+        <div class="container nav-container">                <li><a href="/features">Features</a></li>
+
+            <div class="logo">                <li><a href="/how-it-works">How It Works</a></li>
+
+                <i class="fas fa-hourglass-half"></i>                <li><a href="/pricing">Pricing</a></li>
+
+                <span>Time<span class="highlight">Capsule</span></span>                <li><a href="/contact">Contact</a></li>
+
+            </div>            </ul>
+
+            <ul class="nav-links">        </nav>
+
+                <li><a href="#home" class="nav-link active">Home</a></li>    </div>
+
+                <li><a href="#features" class="nav-link">Features</a></li></header>
+
+                <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
+
+                <li><a href="#pricing" class="nav-link">Pricing</a></li><!-- Hero Section -->
+
+                <li><a href="#testimonials" class="nav-link">Testimonials</a></li><section class="hero">
+
+            </ul>    <div class="container">
+
+            <div class="nav-actions">        <h1>Preserve Your Moments, Treasure Your Memories</h1>
+
+                <a href="/login" class="btn btn-ghost">Login</a>        <p>Create digital time capsules to deliver messages, media, and memories to yourself or others at a future date</p>
+
+                <a href="/signup" class="btn btn-primary">Get Started</a>        <a href="/login" class="cta-button">Create Your Time Capsule</a>
+
+            </div>    </div>
+
+            <button class="mobile-menu-btn" id="mobileMenuBtn"></section>
+
+                <span></span>
+
+                <span></span><!-- Features Section -->
+
+                <span></span><section class="features">
+
+            </button>    <div class="container">
+
+        </div>        <h2>Features That Matter</h2>
+
+    </nav>        <div class="feature-grid">
+
             <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Secure Storage</h3>
-                <p>Bank-level encryption to keep your memories safe and private</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📅</div>
-                <h3>Custom Scheduling</h3>
-                <p>Set exact dates for your time capsules to be delivered</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🖼️</div>
-                <h3>Multimedia Support</h3>
-                <p>Add photos, videos, documents, and voice messages to your capsules</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- How It Works Section -->
-<section class="how-it-works">
-    <div class="container">
-        <h2>How It Works</h2>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-image">
-                    <img src="/images/create-capsule.png" alt="Create Capsule" class="step-img">
+    <!-- Hero Section -->                <div class="feature-icon">🔒</div>
+
+    <section class="hero" id="home">                <h3>Secure Storage</h3>
+
+        <div class="container hero-container">                <p>Bank-level encryption to keep your memories safe and private</p>
+
+            <div class="hero-content">            </div>
+
+                <div class="hero-badge">            <div class="feature-card">
+
+                    <span class="badge-icon">✨</span>                <div class="feature-icon">📅</div>
+
+                    <span>Your Memories, Perfectly Preserved</span>                <h3>Custom Scheduling</h3>
+
+                </div>                <p>Set exact dates for your time capsules to be delivered</p>
+
+                <h1 class="hero-title">            </div>
+
+                    Send Messages to Your            <div class="feature-card">
+
+                    <span class="gradient-text">Future Self</span>                <div class="feature-icon">🖼️</div>
+
+                </h1>                <h3>Multimedia Support</h3>
+
+                <p class="hero-description">                <p>Add photos, videos, documents, and voice messages to your capsules</p>
+
+                    Create digital time capsules filled with memories, photos, and messages.             </div>
+
+                    Schedule them to be delivered at the perfect moment in the future.        </div>
+
+                </p>    </div>
+
+                <div class="hero-actions"></section>
+
+                    <a href="/signup" class="btn btn-primary btn-lg">
+
+                        <span>Start Free Trial</span><!-- How It Works Section -->
+
+                        <i class="fas fa-arrow-right"></i><section class="how-it-works">
+
+                    </a>    <div class="container">
+
+                    <a href="#demo" class="btn btn-outline btn-lg">        <h2>How It Works</h2>
+
+                        <i class="fas fa-play"></i>        <div class="steps">
+
+                        <span>Watch Demo</span>            <div class="step">
+
+                    </a>                <div class="step-number">1</div>
+
+                </div>                <div class="step-image">
+
+                <div class="hero-stats">                    <img src="/images/create-capsule.png" alt="Create Capsule" class="step-img">
+
+                    <div class="stat">                </div>
+
+                        <div class="stat-number" data-count="50000">0</div>                <h3>Create Your Capsule</h3>
+
+                        <div class="stat-label">Capsules Created</div>                <p>Upload your memories and write a message to accompany them</p>
+
+                    </div>            </div>
+
+                    <div class="stat">            <div class="step">
+
+                        <div class="stat-number" data-count="10000">0</div>                <div class="step-number">2</div>
+
+                        <div class="stat-label">Happy Users</div>                <div class="step-image">
+
+                    </div>                    <img src="/images/schedule-delivery.png" alt="Schedule Delivery" class="step-img">
+
+                    <div class="stat">                </div>
+
+                        <div class="stat-number" data-count="95">0</div>                <h3>Schedule Delivery</h3>
+
+                        <div class="stat-label">Satisfaction Rate</div>                <p>Choose the exact date and time you want your capsule to be delivered</p>
+
+                    </div>            </div>
+
+                </div>            <div class="step">
+
+            </div>                <div class="step-number">3</div>
+
+            <div class="hero-image">                <div class="step-image">
+
+                <div class="hero-card card-1">                    <img src="/images/receive-memories.png" alt="Receive Memories" class="step-img">
+
+                    <div class="card-icon">📸</div>                </div>
+
+                    <div class="card-content">                <h3>Receive Your Memories</h3>
+
+                        <h3>Birthday 2026</h3>                <p>Get notified when your time capsule is ready to be opened</p>
+
+                        <p>Photos & messages</p>            </div>
+
+                        <div class="card-progress">        </div>
+
+                            <div class="progress-bar" style="width: 65%"></div>    </div>
+
+                        </div></section>
+
+                    </div>
+
                 </div>
-                <h3>Create Your Capsule</h3>
-                <p>Upload your memories and write a message to accompany them</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-image">
-                    <img src="/images/schedule-delivery.png" alt="Schedule Delivery" class="step-img">
+
+                <div class="hero-card card-2"><!-- Testimonials Section -->
+
+                    <div class="card-icon">💌</div><section class="testimonials">
+
+                    <div class="card-content">    <div class="container">
+
+                        <h3>Anniversary</h3>        <h2>What Our Users Say</h2>
+
+                        <p>Love letter</p>        <div class="testimonial-slider">
+
+                        <div class="card-status">Scheduled</div>            <div class="testimonial">
+
+                    </div>                <p class="testimonial-text">"Time Capsule helped me reconnect with my past self in a meaningful way. It's like having a conversation with yourself across time."</p>
+
+                </div>                <p class="testimonial-author">- Sarah J.</p>
+
+                <div class="hero-card card-3">            </div>
+
+                    <div class="card-icon">🎓</div>        </div>
+
+                    <div class="card-content">    </div>
+
+                        <h3>Graduation 2025</h3></section>
+
+                        <p>Memories & goals</p>
+
+                        <div class="card-date">Dec 15, 2025</div><!-- Final Call-to-Action -->
+
+                    </div><section class="final-cta">
+
+                </div>    <div class="container">
+
+                <div class="hero-visual">        <h2>Start Preserving Your Memories Today</h2>
+
+                    <div class="visual-circle circle-1"></div>        <a href="/features" class="secondary-button">Learn More</a>
+
+                    <div class="visual-circle circle-2"></div>    </div>
+
+                    <div class="visual-circle circle-3"></div></section>
+
                 </div>
-                <h3>Schedule Delivery</h3>
-                <p>Choose the exact date and time you want your capsule to be delivered</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-image">
-                    <img src="/images/receive-memories.png" alt="Receive Memories" class="step-img">
-                </div>
-                <h3>Receive Your Memories</h3>
-                <p>Get notified when your time capsule is ready to be opened</p>
-            </div>
-        </div>
-    </div>
-</section>
 
+            </div><!-- Footer -->
 
-<!-- Testimonials Section -->
-<section class="testimonials">
-    <div class="container">
-        <h2>What Our Users Say</h2>
-        <div class="testimonial-slider">
-            <div class="testimonial">
-                <p class="testimonial-text">"Time Capsule helped me reconnect with my past self in a meaningful way. It's like having a conversation with yourself across time."</p>
-                <p class="testimonial-author">- Sarah J.</p>
-            </div>
-        </div>
-    </div>
-</section>
+        </div><footer>
 
-<!-- Final Call-to-Action -->
-<section class="final-cta">
-    <div class="container">
-        <h2>Start Preserving Your Memories Today</h2>
-        <a href="/features" class="secondary-button">Learn More</a>
-    </div>
-</section>
+        <div class="scroll-indicator">    <div class="container">
 
-<!-- Footer -->
-<footer>
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>About Us</h3>
-                <ul>
-                    <li><a href="/about">Our Story</a></li>
-                    <li><a href="/mission">Mission</a></li>
+            <div class="mouse">        <div class="footer-content">
+
+                <div class="wheel"></div>            <div class="footer-section">
+
+            </div>                <h3>About Us</h3>
+
+            <p>Scroll to explore</p>                <ul>
+
+        </div>                    <li><a href="/about">Our Story</a></li>
+
+    </section>                    <li><a href="/mission">Mission</a></li>
+
                     <li><a href="/team">Team</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Contact Information</h3>
-                <ul>
-                    <li>Email: info@timecapsule.com</li>
-                    <li>Phone: (555) 123-4567</li>
-                    <li>Address: 123 Memory Lane, Time City</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Social Media</h3>
-                <ul>
-                    <li><a href="https://facebook.com/timecapsule" target="_blank" rel="noopener">Facebook</a></li>
-                    <li><a href="https://instagram.com/timecapsule" target="_blank" rel="noopener">Instagram</a></li>
-                    <li><a href="https://twitter.com/timecapsule" target="_blank" rel="noopener">Twitter</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="/privacy">Privacy Policy</a></li>
-                    <li><a href="/terms">Terms of Service</a></li>
-                    <li><a href="/cookies">Cookie Policy</a></li>
-                </ul>
+
+    <!-- Features Section -->                </ul>
+
+    <section class="features" id="features">            </div>
+
+        <div class="container">            <div class="footer-section">
+
+            <div class="section-header">                <h3>Contact Information</h3>
+
+                <span class="section-badge">Features</span>                <ul>
+
+                <h2 class="section-title">Everything You Need to Preserve Memories</h2>                    <li>Email: info@timecapsule.com</li>
+
+                <p class="section-description">                    <li>Phone: (555) 123-4567</li>
+
+                    Powerful features designed to make your time capsule experience unforgettable                    <li>Address: 123 Memory Lane, Time City</li>
+
+                </p>                </ul>
+
+            </div>            </div>
+
+            <div class="features-grid">            <div class="footer-section">
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">                <h3>Social Media</h3>
+
+                    <div class="feature-icon">                <ul>
+
+                        <i class="fas fa-clock"></i>                    <li><a href="https://facebook.com/timecapsule" target="_blank" rel="noopener">Facebook</a></li>
+
+                    </div>                    <li><a href="https://instagram.com/timecapsule" target="_blank" rel="noopener">Instagram</a></li>
+
+                    <h3>Smart Scheduling</h3>                    <li><a href="https://twitter.com/timecapsule" target="_blank" rel="noopener">Twitter</a></li>
+
+                    <p>Schedule your capsules to be delivered at any date in the future with precision timing.</p>                </ul>
+
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>            </div>
+
+                </div>            <div class="footer-section">
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">                <h3>Legal</h3>
+
+                    <div class="feature-icon">                <ul>
+
+                        <i class="fas fa-shield-alt"></i>                    <li><a href="/privacy">Privacy Policy</a></li>
+
+                    </div>                    <li><a href="/terms">Terms of Service</a></li>
+
+                    <h3>Bank-Level Security</h3>                    <li><a href="/cookies">Cookie Policy</a></li>
+
+                    <p>Your memories are encrypted and protected with military-grade security protocols.</p>                </ul>
+
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>            </div>
+
+                </div>        </div>
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">        <div class="copyright">
+
+                    <div class="feature-icon">            &copy; 2025 Time Capsule. All rights reserved.
+
+                        <i class="fas fa-images"></i>        </div>
+
+                    </div>    </div>
+
+                    <h3>Rich Media Support</h3></footer>
+
+                    <p>Add photos, videos, audio recordings, and documents to your time capsules.</p></body>
+
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a></html>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Group Capsules</h3>
+                    <p>Create shared time capsules with friends and family for special occasions.</p>
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Reminders</h3>
+                    <p>Get notified before your capsules are delivered so you can prepare.</p>
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analytics & Insights</h3>
+                    <p>Track your time capsule journey with beautiful analytics and insights.</p>
+                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
+                </div>
             </div>
         </div>
-        <div class="copyright">
-            &copy; 2025 Time Capsule. All rights reserved.
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Process</span>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-description">Creating your time capsule is simple and intuitive</p>
+            </div>
+            <div class="steps">
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">01</div>
+                    <div class="step-content">
+                        <h3>Create Your Capsule</h3>
+                        <p>Write messages, upload photos and videos, and add all the memories you want to preserve.</p>
+                    </div>
+                    <div class="step-visual">
+                        <i class="fas fa-pen-fancy"></i>
+                    </div>
+                </div>
+                <div class="step" data-aos="fade-left">
+                    <div class="step-number">02</div>
+                    <div class="step-content">
+                        <h3>Choose Delivery Date</h3>
+                        <p>Select when you want to receive your time capsule - could be months or years in the future.</p>
+                    </div>
+                    <div class="step-visual">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                </div>
+                <div class="step" data-aos="fade-right">
+                    <div class="step-number">03</div>
+                    <div class="step-content">
+                        <h3>We Keep It Safe</h3>
+                        <p>Your capsule is encrypted and securely stored until the perfect moment arrives.</p>
+                    </div>
+                    <div class="step-visual">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                </div>
+                <div class="step" data-aos="fade-left">
+                    <div class="step-number">04</div>
+                    <div class="step-content">
+                        <h3>Receive & Relive</h3>
+                        <p>Get notified when your capsule is ready and relive those precious memories.</p>
+                    </div>
+                    <div class="step-visual">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</footer>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Testimonials</span>
+                <h2 class="section-title">What Our Users Say</h2>
+                <p class="section-description">Join thousands of happy users preserving their memories</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card" data-aos="zoom-in" data-aos-delay="0">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "TimeCapsule helped me send a message to my future self. Opening it a year later was incredibly emotional and meaningful!"
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://i.pravatar.cc/100?img=1" alt="Sarah">
+                        <div>
+                            <h4>Sarah Johnson</h4>
+                            <p>Designer</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "Perfect for preserving family memories! We created a group capsule for our wedding and will open it on our 10th anniversary."
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://i.pravatar.cc/100?img=33" alt="Michael">
+                        <div>
+                            <h4>Michael Chen</h4>
+                            <p>Photographer</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">
+                        "The interface is beautiful and intuitive. Creating my first time capsule was so easy and fun!"
+                    </p>
+                    <div class="testimonial-author">
+                        <img src="https://i.pravatar.cc/100?img=47" alt="Emma">
+                        <div>
+                            <h4>Emma Davis</h4>
+                            <p>Teacher</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Start Preserving Your Memories Today</h2>
+                <p>Join thousands of users who trust TimeCapsule with their precious memories</p>
+                <div class="cta-actions">
+                    <a href="/signup" class="btn btn-white btn-lg">
+                        <span>Get Started Free</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <div class="cta-info">
+                        <i class="fas fa-check-circle"></i>
+                        <span>No credit card required • Free 30-day trial</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col">
+                    <div class="logo">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>Time<span class="highlight">Capsule</span></span>
+                    </div>
+                    <p>Preserve your memories for the future with our secure and intuitive platform.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#">Security</a></li>
+                        <li><a href="#">Roadmap</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">GDPR</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 TimeCapsule. All rights reserved.</p>
+                <p>Made with <i class="fas fa-heart"></i> for preserving memories</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/javascripts/modern-home.js"></script>
 </body>
 </html>

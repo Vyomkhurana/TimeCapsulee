@@ -1,234 +1,465 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html><!DOCTYPE html>
 
-<html lang="en"><html lang="en">
+<html lang="en">
 
-<head><head>
+<head><html lang="en"><html lang="en">
 
-    <meta charset="UTF-8">    <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><head><head>
 
-    <title>Sign Up - Time Capsule</title>    <title>Time Capsule - Sign Up</title>
+    <title>Sign Up - TimeCapsule</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/stylesheets/modern-auth.css">    <meta charset="UTF-8">    <meta charset="UTF-8">
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    <link rel="stylesheet" href="../stylesheets/signup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
+    <style>
 
-    <link rel="stylesheet" href="../stylesheets/style.css"><body>
+        .password-strength {    <title>Sign Up - Time Capsule</title>    <title>Time Capsule - Sign Up</title>
 
-    <link rel="stylesheet" href="../stylesheets/animations.css"><nav>
+            margin-top: 8px;
 
-    <style>    <a href="/" class="logo">Time Capsule</a>
+            display: none;    <link rel="preconnect" href="https://fonts.googleapis.com">    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        * {    <div class="nav-links">
+        }
 
-            margin: 0;        <a href="/">Home</a>
+        .strength-bar {    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    <link rel="stylesheet" href="../stylesheets/signup.css">
 
-            padding: 0;        <a href="/features">Features</a>
+            height: 4px;
 
-            box-sizing: border-box;        <a href="/login">Login</a>
+            background: var(--gray-light);    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-        }    </div>
+            border-radius: 2px;
 
-</nav>
+            overflow: hidden;    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
 
-        body {
+            margin-bottom: 8px;
 
-            font-family: 'Inter', sans-serif;<section class="signup-container">
+        }    <link rel="stylesheet" href="../stylesheets/style.css"><body>
 
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);    <div class="signup-content">
+        .strength-bar > div {
 
-            min-height: 100vh;        <h1>Create Your Account</h1>
+            height: 100%;    <link rel="stylesheet" href="../stylesheets/animations.css"><nav>
 
-            display: flex;        <p>Join Time Capsule to start preserving your memories</p>
+            width: 0;
 
-            align-items: center;
+            transition: all 0.3s ease;    <style>    <a href="/" class="logo">Time Capsule</a>
 
-            justify-content: center;        <form id="signup-form" novalidate>
+        }
 
-            padding: 20px;            <div class="form-group">
+        .strength-text {        * {    <div class="nav-links">
 
-            position: relative;                <label for="username">Username</label>
+            font-size: 12px;
 
-            overflow: hidden;                <input type="text" id="username" name="username">
+            font-weight: 600;            margin: 0;        <a href="/">Home</a>
 
-        }            </div>
+        }
 
-            <div class="form-group">
+    </style>            padding: 0;        <a href="/features">Features</a>
 
-        /* Animated Background Particles */                <label for="email">Email</label>
+</head>
 
-        .particles {                <input type="email" id="email" name="email">
+<body>            box-sizing: border-box;        <a href="/login">Login</a>
 
-            position: absolute;            </div>
+    <!-- Animated Background -->
 
-            top: 0;            <div class="form-group">
+    <div class="animated-bg">        }    </div>
 
-            left: 0;                <label for="password">Password</label>
+        <div class="gradient-orb orb-1"></div>
 
-            width: 100%;                <input type="password" id="password" name="password">
+        <div class="gradient-orb orb-2"></div></nav>
 
-            height: 100%;            </div>
+        <div class="gradient-orb orb-3"></div>
 
-            overflow: hidden;            <div class="form-group">
+    </div>        body {
 
-            z-index: 0;                <label for="confirm-password">Confirm Password</label>
 
-        }                <input type="password" id="confirm-password" name="confirm-password">
 
-            </div>
+    <!-- Back to Home -->            font-family: 'Inter', sans-serif;<section class="signup-container">
 
-        .particle {            <div class="form-group checkbox-group">
+    <a href="/" class="back-home">
 
-            position: absolute;                <input type="checkbox" id="terms" name="terms">
+        <i class="fas fa-arrow-left"></i>            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);    <div class="signup-content">
 
-            background: rgba(255, 255, 255, 0.1);                <label for="terms">I agree to the <a href="/terms">Terms and Conditions</a> and <a href="/privacy">Privacy Policy</a></label>
+        <span>Back to Home</span>
 
-            border-radius: 50%;            </div>
+    </a>            min-height: 100vh;        <h1>Create Your Account</h1>
 
-            animation: float 15s infinite ease-in-out;            <div id="error-message" class="error-message" style="display: none; color: #ff0000; margin-bottom: 1rem; text-align: center;"></div>
 
-        }            <button type="submit" class="cta-button">Sign Up</button>
 
-            <a href="/login" class="secondary-button">Already have an account?</a>
+    <!-- Main Container -->            display: flex;        <p>Join Time Capsule to start preserving your memories</p>
 
-        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }        </form>
+    <div class="auth-container">
+
+        <div class="auth-box">            align-items: center;
+
+            <!-- Left Side - Branding -->
+
+            <div class="auth-branding">            justify-content: center;        <form id="signup-form" novalidate>
+
+                <div class="brand-content">
+
+                    <div class="logo">            padding: 20px;            <div class="form-group">
+
+                        <i class="fas fa-hourglass-half"></i>
+
+                        <span>Time<span class="highlight">Capsule</span></span>            position: relative;                <label for="username">Username</label>
+
+                    </div>
+
+                    <h2>Join TimeCapsule</h2>            overflow: hidden;                <input type="text" id="username" name="username">
+
+                    <p>Create an account to start preserving your precious memories for the future.</p>
+
+                            }            </div>
+
+                    <div class="features-list">
+
+                        <div class="feature-item">            <div class="form-group">
+
+                            <i class="fas fa-check-circle"></i>
+
+                            <span>Free 30-day trial</span>        /* Animated Background Particles */                <label for="email">Email</label>
+
+                        </div>
+
+                        <div class="feature-item">        .particles {                <input type="email" id="email" name="email">
+
+                            <i class="fas fa-check-circle"></i>
+
+                            <span>No credit card required</span>            position: absolute;            </div>
+
+                        </div>
+
+                        <div class="feature-item">            top: 0;            <div class="form-group">
+
+                            <i class="fas fa-check-circle"></i>
+
+                            <span>Cancel anytime</span>            left: 0;                <label for="password">Password</label>
+
+                        </div>
+
+                    </div>            width: 100%;                <input type="password" id="password" name="password">
+
+
+
+                    <div class="testimonial">            height: 100%;            </div>
+
+                        <div class="testimonial-stars">
+
+                            <i class="fas fa-star"></i>            overflow: hidden;            <div class="form-group">
+
+                            <i class="fas fa-star"></i>
+
+                            <i class="fas fa-star"></i>            z-index: 0;                <label for="confirm-password">Confirm Password</label>
+
+                            <i class="fas fa-star"></i>
+
+                            <i class="fas fa-star"></i>        }                <input type="password" id="confirm-password" name="confirm-password">
+
+                        </div>
+
+                        <p>"Best decision ever! I've been able to preserve so many special memories."</p>            </div>
+
+                        <div class="testimonial-author">
+
+                            <img src="https://i.pravatar.cc/60?img=33" alt="User">        .particle {            <div class="form-group checkbox-group">
+
+                            <div>
+
+                                <strong>Michael Chen</strong>            position: absolute;                <input type="checkbox" id="terms" name="terms">
+
+                                <span>Verified User</span>
+
+                            </div>            background: rgba(255, 255, 255, 0.1);                <label for="terms">I agree to the <a href="/terms">Terms and Conditions</a> and <a href="/privacy">Privacy Policy</a></label>
+
+                        </div>
+
+                    </div>            border-radius: 50%;            </div>
+
+                </div>
+
+            </div>            animation: float 15s infinite ease-in-out;            <div id="error-message" class="error-message" style="display: none; color: #ff0000; margin-bottom: 1rem; text-align: center;"></div>
+
+
+
+            <!-- Right Side - Signup Form -->        }            <button type="submit" class="cta-button">Sign Up</button>
+
+            <div class="auth-form-container">
+
+                <div class="form-header">            <a href="/login" class="secondary-button">Already have an account?</a>
+
+                    <h1>Create Account</h1>
+
+                    <p>Already have an account? <a href="/login" class="link-primary">Sign in</a></p>        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }        </form>
+
+                </div>
 
         .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 2s; }
 
-        .particle:nth-child(3) { width: 100px; height: 100px; left: 35%; animation-delay: 4s; }        <div class="social-signup">
+                <!-- Social Signup -->
 
-        .particle:nth-child(4) { width: 50px; height: 50px; left: 50%; animation-delay: 6s; }            <h3>Or sign up with</h3>
+                <div class="social-login">        .particle:nth-child(3) { width: 100px; height: 100px; left: 35%; animation-delay: 4s; }        <div class="social-signup">
 
-        .particle:nth-child(5) { width: 70px; height: 70px; left: 65%; animation-delay: 8s; }            <div class="social-buttons">
+                    <button class="btn-social btn-google">
 
-        .particle:nth-child(6) { width: 90px; height: 90px; left: 80%; animation-delay: 10s; }                <button type="button" class="social-button google">
+                        <i class="fab fa-google"></i>        .particle:nth-child(4) { width: 50px; height: 50px; left: 50%; animation-delay: 6s; }            <h3>Or sign up with</h3>
 
-                    <i class="fab fa-google"></i>
+                        <span>Sign up with Google</span>
+
+                    </button>        .particle:nth-child(5) { width: 70px; height: 70px; left: 65%; animation-delay: 8s; }            <div class="social-buttons">
+
+                    <button class="btn-social btn-github">
+
+                        <i class="fab fa-github"></i>        .particle:nth-child(6) { width: 90px; height: 90px; left: 80%; animation-delay: 10s; }                <button type="button" class="social-button google">
+
+                        <span>Sign up with GitHub</span>
+
+                    </button>                    <i class="fab fa-google"></i>
+
+                </div>
 
         @keyframes float {                </button>
 
-            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }                <button type="button" class="social-button facebook">
+                <div class="divider">
+
+                    <span>Or sign up with email</span>            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }                <button type="button" class="social-button facebook">
+
+                </div>
 
             50% { transform: translateY(-100px) rotate(180deg); opacity: 0.6; }                    <i class="fab fa-facebook-f"></i>
 
-        }                </button>
+                <!-- Signup Form -->
 
-                <button type="button" class="social-button twitter">
+                <form id="signupForm" class="auth-form">        }                </button>
 
-        /* Signup Container */                    <i class="fab fa-twitter"></i>
+                    <div class="alert alert-error" id="errorAlert" style="display: none;">
 
-        .signup-container {                </button>
+                        <i class="fas fa-exclamation-circle"></i>                <button type="button" class="social-button twitter">
 
-            position: relative;            </div>
+                        <span id="errorMessage"></span>
 
-            z-index: 1;        </div>
+                    </div>        /* Signup Container */                    <i class="fab fa-twitter"></i>
 
-            width: 100%;    </div>
 
-            max-width: 500px;</section>
 
-            background: rgba(255, 255, 255, 0.98);
+                    <div class="form-group">        .signup-container {                </button>
 
-            backdrop-filter: blur(20px);<footer>
+                        <label for="username">
 
-            border-radius: 24px;    <p>&copy; 2025 Time Capsule. All rights reserved.</p>
+                            <i class="fas fa-user"></i>            position: relative;            </div>
 
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);</footer>
+                            Username
 
-            padding: 48px 40px;
+                        </label>            z-index: 1;        </div>
 
-            animation: slideUp 0.6s ease-out;<script>
+                        <input 
 
-        }    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+                            type="text"             width: 100%;    </div>
 
-        e.preventDefault();
+                            id="username" 
 
-        @keyframes slideUp {
+                            name="username"             max-width: 500px;</section>
 
-            from {        const errorMessage = document.getElementById('error-message');
+                            placeholder="Choose a username"
 
-                opacity: 0;        errorMessage.style.display = 'none';
+                            required            background: rgba(255, 255, 255, 0.98);
 
-                transform: translateY(30px);
+                            autocomplete="username"
 
-            }        try {
+                        >            backdrop-filter: blur(20px);<footer>
 
-            to {            const formData = {
+                        <span class="error-text" id="usernameError"></span>
 
-                opacity: 1;                username: document.getElementById('username').value.trim(),
+                    </div>            border-radius: 24px;    <p>&copy; 2025 Time Capsule. All rights reserved.</p>
 
-                transform: translateY(0);                email: document.getElementById('email').value.trim(),
 
-            }                password: document.getElementById('password').value,
 
-        }                confirmPassword: document.getElementById('confirm-password').value,
+                    <div class="form-group">            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);</footer>
 
-                terms: document.getElementById('terms').checked
+                        <label for="email">
 
-        /* Logo */            };
+                            <i class="fas fa-envelope"></i>            padding: 48px 40px;
 
-        .logo {
+                            Email Address
 
-            text-align: center;            // Client-side validation
+                        </label>            animation: slideUp 0.6s ease-out;<script>
 
-            margin-bottom: 32px;            if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+                        <input 
 
-        }                throw new Error('All fields are required');
+                            type="email"         }    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+
+                            id="email" 
+
+                            name="email"         e.preventDefault();
+
+                            placeholder="Enter your email"
+
+                            required        @keyframes slideUp {
+
+                            autocomplete="email"
+
+                        >            from {        const errorMessage = document.getElementById('error-message');
+
+                        <span class="error-text" id="emailError"></span>
+
+                    </div>                opacity: 0;        errorMessage.style.display = 'none';
+
+
+
+                    <div class="form-group">                transform: translateY(30px);
+
+                        <label for="password">
+
+                            <i class="fas fa-lock"></i>            }        try {
+
+                            Password
+
+                        </label>            to {            const formData = {
+
+                        <div class="password-input">
+
+                            <input                 opacity: 1;                username: document.getElementById('username').value.trim(),
+
+                                type="password" 
+
+                                id="password"                 transform: translateY(0);                email: document.getElementById('email').value.trim(),
+
+                                name="password" 
+
+                                placeholder="Create a password"            }                password: document.getElementById('password').value,
+
+                                required
+
+                                autocomplete="new-password"        }                confirmPassword: document.getElementById('confirm-password').value,
+
+                            >
+
+                            <button type="button" class="toggle-password" id="togglePassword">                terms: document.getElementById('terms').checked
+
+                                <i class="fas fa-eye"></i>
+
+                            </button>        /* Logo */            };
+
+                        </div>
+
+                        <div class="password-strength" id="passwordStrength">        .logo {
+
+                            <div class="strength-bar">
+
+                                <div></div>            text-align: center;            // Client-side validation
+
+                            </div>
+
+                            <div class="strength-text"></div>            margin-bottom: 32px;            if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+
+                        </div>
+
+                        <span class="error-text" id="passwordError"></span>        }                throw new Error('All fields are required');
+
+                    </div>
 
             }
 
-        .logo-icon {
+                    <div class="form-group">
 
-            width: 64px;            if (formData.password !== formData.confirmPassword) {
+                        <label for="confirmPassword">        .logo-icon {
 
-            height: 64px;                throw new Error('Passwords do not match');
+                            <i class="fas fa-lock"></i>
 
-            background: linear-gradient(135deg, #f093fb, #f5576c);            }
+                            Confirm Password            width: 64px;            if (formData.password !== formData.confirmPassword) {
 
-            border-radius: 16px;
+                        </label>
 
-            display: inline-flex;            if (formData.password.length < 6) {
+                        <div class="password-input">            height: 64px;                throw new Error('Passwords do not match');
 
-            align-items: center;                throw new Error('Password must be at least 6 characters long');
+                            <input 
 
-            justify-content: center;            }
+                                type="password"             background: linear-gradient(135deg, #f093fb, #f5576c);            }
 
-            margin-bottom: 16px;
+                                id="confirmPassword" 
 
-            animation: pulse 2s ease-in-out infinite;            if (!formData.terms) {
+                                name="confirmPassword"             border-radius: 16px;
 
-        }                throw new Error('Please accept the terms and conditions');
+                                placeholder="Confirm your password"
 
-            }
+                                required            display: inline-flex;            if (formData.password.length < 6) {
 
-        .logo-icon i {
+                                autocomplete="new-password"
 
-            font-size: 32px;            const response = await fetch('/users/signup', {
+                            >            align-items: center;                throw new Error('Password must be at least 6 characters long');
+
+                            <button type="button" class="toggle-password" id="toggleConfirmPassword">
+
+                                <i class="fas fa-eye"></i>            justify-content: center;            }
+
+                            </button>
+
+                        </div>            margin-bottom: 16px;
+
+                        <span class="error-text" id="confirmPasswordError"></span>
+
+                    </div>            animation: pulse 2s ease-in-out infinite;            if (!formData.terms) {
+
+
+
+                    <div class="form-group">        }                throw new Error('Please accept the terms and conditions');
+
+                        <label class="checkbox-container">
+
+                            <input type="checkbox" id="terms" name="terms" required>            }
+
+                            <span class="checkmark"></span>
+
+                            <span>I agree to the <a href="#" class="link-primary">Terms of Service</a> and <a href="#" class="link-primary">Privacy Policy</a></span>        .logo-icon i {
+
+                        </label>
+
+                        <span class="error-text" id="termsError"></span>            font-size: 32px;            const response = await fetch('/users/signup', {
+
+                    </div>
 
             color: white;                method: 'POST',
 
-        }                headers: {
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="signupBtn">
 
-                    'Content-Type': 'application/json'
+                        <span class="btn-text">Create Account</span>        }                headers: {
 
-        .logo h1 {                },
+                        <span class="btn-loader" style="display: none;">
+
+                            <i class="fas fa-spinner fa-spin"></i>                    'Content-Type': 'application/json'
+
+                        </span>
+
+                    </button>        .logo h1 {                },
+
+                </form>
 
             font-family: 'Playfair Display', serif;                body: JSON.stringify(formData)
 
-            font-size: 32px;            });
+                <div class="form-footer">
 
-            font-weight: 700;
+                    <p>By creating an account, you agree to our <a href="#">Terms</a> and have read our <a href="#">Privacy Policy</a></p>            font-size: 32px;            });
 
-            background: linear-gradient(135deg, #f093fb, #f5576c);            const data = await response.json();
+                </div>
 
-            -webkit-background-clip: text;
+            </div>            font-weight: 700;
 
-            background-clip: text;            if (!response.ok) {
+        </div>
+
+    </div>            background: linear-gradient(135deg, #f093fb, #f5576c);            const data = await response.json();
+
+
+
+    <script src="/javascripts/modern-auth.js"></script>            -webkit-background-clip: text;
+
+</body>
+
+</html>            background-clip: text;            if (!response.ok) {
+
 
             -webkit-text-fill-color: transparent;                throw new Error(data.error || 'Signup failed');
 
