@@ -1,1 +1,888 @@
-const Capsule = require('../Models/Capsule');const multer = require('multer');const path = require('path');const mongoose = require('mongoose');const { logActivity } = require('../utils/activityLogger');const Template = require('../Models/Template');const storage = multer.diskStorage({    destination: './public/uploads/',    filename: (req, file, cb) => {        cb(null, `${Date.now()}-${file.originalname}`);    }});const upload = multer({    storage,    limits: { fileSize: 10 * 1024 * 1024 },     fileFilter: (req, file, cb) => {        const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());        if (extname) {            return cb(null, true);        }        cb(new Error('Invalid file type'));    }}).array('files', 5); const createCapsule = async (req, res) => {    try {        upload(req, res, async (err) => {            if (err) {                return res.status(400).json({ error: err.message });            }            const { title, message, scheduleDate, category, creator } = req.body;            const files = req.files?.map(file => ({                filename: file.filename,                path: file.path.replace('public', ''),                 mimetype: file.mimetype            }));            const capsule = await Capsule.create({                title,                message,                category,                files: files || [],                scheduleDate,                creator: new mongoose.Types.ObjectId(creator)             });            await logActivity({                userId: creator,                action: 'capsule_created',                entityType: 'capsule',                entityId: capsule._id,                details: { title, category },                req            });            res.status(201).json({                success: true,                capsule            });        });    } catch (err) {        console.error('Create capsule error:', err);        res.status(500).json({ error: err.message || 'Failed to create time capsule' });    }};const getMyCapsules = async (req, res) => {    try {        const userId = req.query.userId;        if (!userId) {            return res.status(400).json({ error: 'User ID is required' });        }        console.log('Fetching capsules for user ID:', userId);        const capsules = await Capsule.find({ creator: userId })            .sort({ scheduleDate: 1 });        console.log('Found capsules:', capsules.length);        res.json({ capsules });    } catch (error) {        console.error('Error fetching capsules:', error);        res.status(500).json({ error: 'Failed to fetch capsules' });    }};const getCapsule = async (req, res) => {    try {        const capsule = await Capsule.findOne({            _id: req.params.id,            creator: req.user._id        });        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        res.json({ capsule });    } catch (err) {        console.error('Get capsule error:', err);        res.status(500).json({ error: 'Failed to fetch capsule' });    }};const deleteCapsule = async (req, res) => {    try {        const capsuleId = req.params.id;        const capsule = await Capsule.findById(capsuleId);        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        await Capsule.findByIdAndDelete(capsuleId);        if (capsule.files && capsule.files.length > 0) {            const fs = require('fs').promises;            const path = require('path');            for (const file of capsule.files) {                try {                    const filePath = path.join(__dirname, '../public', file.path);                    await fs.unlink(filePath);                } catch (err) {                    console.error('Error deleting file:', err);                }            }        }        res.json({             success: true,             message: 'Capsule deleted successfully',            deletedCapsule: capsule         });    } catch (error) {        console.error('Delete capsule error:', error);        res.status(500).json({ error: 'Failed to delete capsule' });    }};const getStatistics = async (req, res) => {    try {        const userId = req.user._id;        const now = new Date();        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);        const [totalCapsules, scheduledCapsules, deliveredCapsules, categories] = await Promise.all([            Capsule.countDocuments({ creator: userId }),            Capsule.countDocuments({ creator: userId, status: 'pending' }),            Capsule.countDocuments({ creator: userId, status: 'delivered' }),            Capsule.distinct('category', { creator: userId })        ]);        const [lastMonthTotal, lastMonthScheduled, lastMonthDelivered, lastMonthCategories] = await Promise.all([            Capsule.countDocuments({                 creator: userId,                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }            }),            Capsule.countDocuments({                 creator: userId,                status: 'pending',                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }            }),            Capsule.countDocuments({                 creator: userId,                status: 'delivered',                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }            }),            Capsule.distinct('category', {                 creator: userId,                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }            })        ]);        const calculateChange = (current, previous) => {            if (previous === 0) return current > 0 ? 100 : 0;            return Math.round(((current - previous) / previous) * 100);        };        res.json({            totalCapsules,            scheduledCapsules,            deliveredCapsules,            uniqueCategories: categories.length,            totalCapsulesChange: calculateChange(totalCapsules, lastMonthTotal),            scheduledCapsulesChange: calculateChange(scheduledCapsules, lastMonthScheduled),            deliveredCapsulesChange: calculateChange(deliveredCapsules, lastMonthDelivered),            categoriesChange: calculateChange(categories.length, lastMonthCategories.length)        });    } catch (error) {        console.error('Error fetching statistics:', error);        res.status(500).json({ error: 'Failed to fetch statistics' });    }};const getActivity = async (req, res) => {    try {        const userId = req.user._id;        const period = req.query.period || 'week';        const now = new Date();        let startDate, endDate, format;        switch (period) {            case 'week':                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);                endDate = now;                format = '%Y-%m-%d';                break;            case 'month':                startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());                endDate = now;                format = '%Y-%m-%d';                break;            case 'year':                startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);                endDate = now;                format = '%Y-%m';                break;            default:                return res.status(400).json({ error: 'Invalid period' });        }        const [created, delivered] = await Promise.all([            Capsule.aggregate([                {                    $match: {                        creator: userId,                        createdAt: { $gte: startDate, $lte: endDate }                    }                },                {                    $group: {                        _id: { $dateToString: { format, date: '$createdAt' } },                        count: { $sum: 1 }                    }                },                { $sort: { '_id': 1 } }            ]),            Capsule.aggregate([                {                    $match: {                        creator: userId,                        status: 'delivered',                        createdAt: { $gte: startDate, $lte: endDate }                    }                },                {                    $group: {                        _id: { $dateToString: { format, date: '$createdAt' } },                        count: { $sum: 1 }                    }                },                { $sort: { '_id': 1 } }            ])        ]);        const dates = [];        const currentDate = new Date(startDate);        while (currentDate <= endDate) {            dates.push(currentDate.toISOString().split('T')[0]);            currentDate.setDate(currentDate.getDate() + 1);        }        const createdMap = new Map(created.map(item => [item._id, item.count]));        const deliveredMap = new Map(delivered.map(item => [item._id, item.count]));        const labels = dates;        const createdData = dates.map(date => createdMap.get(date) || 0);        const deliveredData = dates.map(date => deliveredMap.get(date) || 0);        res.json({            labels,            created: createdData,            delivered: deliveredData        });    } catch (error) {        console.error('Error fetching activity data:', error);        res.status(500).json({ error: 'Failed to fetch activity data' });    }};const getCategories = async (req, res) => {    try {        const userId = req.user._id;        const categories = await Capsule.aggregate([            {                $match: { creator: userId }            },            {                $group: {                    _id: '$category',                    count: { $sum: 1 }                }            },            {                $sort: { count: -1 }            }        ]);        res.json({            labels: categories.map(cat => cat._id),            values: categories.map(cat => cat.count)        });    } catch (error) {        console.error('Error fetching categories data:', error);        res.status(500).json({ error: 'Failed to fetch categories data' });    }};const getRecentActivity = async (req, res) => {    try {        const userId = req.user._id;        const activities = await Capsule.find({ creator: userId })            .sort({ createdAt: -1 })            .limit(10)            .select('title status createdAt scheduleDate')            .lean();        const formattedActivities = activities.map(activity => {            let type = 'created';            if (activity.status === 'delivered') type = 'delivered';            else if (activity.status === 'failed') type = 'failed';            else if (activity.scheduleDate) type = 'scheduled';            return {                title: activity.title,                type,                timestamp: activity.createdAt            };        });        res.json(formattedActivities);    } catch (error) {        console.error('Error fetching recent activity:', error);        res.status(500).json({ error: 'Failed to fetch recent activity' });    }};const exportReport = async (req, res) => {    try {        const userId = req.user._id;        const capsules = await Capsule.find({ creator: userId })            .sort({ createdAt: -1 })            .lean();        const csvHeader = 'Title,Category,Status,Created At,Scheduled Date\n';        const csvRows = capsules.map(capsule => {            return `"${capsule.title}","${capsule.category}","${capsule.status}","${capsule.createdAt.toISOString()}","${capsule.scheduleDate?.toISOString() || ''}"\n`;        });        const csvContent = csvHeader + csvRows.join('');        res.setHeader('Content-Type', 'text/csv');        res.setHeader('Content-Disposition', `attachment; filename=capsule-report-${new Date().toISOString().split('T')[0]}.csv`);        res.send(csvContent);    } catch (error) {        console.error('Error exporting report:', error);        res.status(500).json({ error: 'Failed to export report' });    }};const searchCapsules = async (req, res) => {    try {        const userId = req.query.userId;        const {             query,             category,             status,             tags,             priority,             starred,             archived,            dateFrom,            dateTo,            sortBy = 'createdAt',            sortOrder = 'desc',            page = 1,            limit = 20        } = req.query;        const filter = { creator: userId };        if (query) {            filter.$text = { $search: query };        }        if (category) {            filter.category = category;        }        if (status) {            filter.status = status;        }        if (tags) {            const tagArray = tags.split(',').map(tag => tag.trim());            filter.tags = { $in: tagArray };        }        if (priority) {            filter.priority = priority;        }        if (starred !== undefined) {            filter.starred = starred === 'true';        }        if (archived !== undefined) {            filter.archived = archived === 'true';        } else {            filter.archived = false;        }        if (dateFrom || dateTo) {            filter.scheduleDate = {};            if (dateFrom) filter.scheduleDate.$gte = new Date(dateFrom);            if (dateTo) filter.scheduleDate.$lte = new Date(dateTo);        }        const skip = (parseInt(page) - 1) * parseInt(limit);        const capsules = await Capsule.find(filter)            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })            .skip(skip)            .limit(parseInt(limit))            .lean();        const total = await Capsule.countDocuments(filter);        res.json({            capsules,            pagination: {                page: parseInt(page),                limit: parseInt(limit),                total,                pages: Math.ceil(total / parseInt(limit))            }        });    } catch (error) {        console.error('Error searching capsules:', error);        res.status(500).json({ error: 'Failed to search capsules' });    }};const shareCapsule = async (req, res) => {    try {        const { capsuleId, userEmail, permission = 'view' } = req.body;        const User = require('../Models/User');        const sharedUser = await User.findOne({ email: userEmail });        if (!sharedUser) {            return res.status(404).json({ error: 'User not found' });        }        const capsule = await Capsule.findByIdAndUpdate(            capsuleId,            {                $addToSet: {                    sharedWith: {                        user: sharedUser._id,                        permissions: permission,                        sharedAt: new Date()                    }                }            },            { new: true }        );        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        res.json({            success: true,            message: `Capsule shared with ${userEmail}`,            capsule        });    } catch (error) {        console.error('Error sharing capsule:', error);        res.status(500).json({ error: 'Failed to share capsule' });    }};const toggleArchive = async (req, res) => {    try {        const { capsuleId } = req.params;        const capsule = await Capsule.findById(capsuleId);        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        capsule.archived = !capsule.archived;        await capsule.save();        res.json({            success: true,            archived: capsule.archived,            message: capsule.archived ? 'Capsule archived' : 'Capsule unarchived'        });    } catch (error) {        console.error('Error toggling archive:', error);        res.status(500).json({ error: 'Failed to toggle archive status' });    }};const toggleStarred = async (req, res) => {    try {        const { capsuleId } = req.params;        const capsule = await Capsule.findById(capsuleId);        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        capsule.starred = !capsule.starred;        await capsule.save();        res.json({            success: true,            starred: capsule.starred,            message: capsule.starred ? 'Capsule starred' : 'Capsule unstarred'        });    } catch (error) {        console.error('Error toggling starred:', error);        res.status(500).json({ error: 'Failed to toggle starred status' });    }};const bulkDelete = async (req, res) => {    try {        const { capsuleIds } = req.body;        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {            return res.status(400).json({ error: 'Invalid capsule IDs' });        }        const result = await Capsule.deleteMany({            _id: { $in: capsuleIds }        });        res.json({            success: true,            deletedCount: result.deletedCount,            message: `${result.deletedCount} capsule(s) deleted`        });    } catch (error) {        console.error('Error bulk deleting capsules:', error);        res.status(500).json({ error: 'Failed to delete capsules' });    }};const bulkArchive = async (req, res) => {    try {        const { capsuleIds, archive = true } = req.body;        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {            return res.status(400).json({ error: 'Invalid capsule IDs' });        }        const result = await Capsule.updateMany(            { _id: { $in: capsuleIds } },            { $set: { archived: archive } }        );        res.json({            success: true,            modifiedCount: result.modifiedCount,            message: `${result.modifiedCount} capsule(s) ${archive ? 'archived' : 'unarchived'}`        });    } catch (error) {        console.error('Error bulk archiving capsules:', error);        res.status(500).json({ error: 'Failed to archive capsules' });    }};const updateTags = async (req, res) => {    try {        const { capsuleId } = req.params;        const { tags } = req.body;        if (!Array.isArray(tags)) {            return res.status(400).json({ error: 'Tags must be an array' });        }        const capsule = await Capsule.findByIdAndUpdate(            capsuleId,            { $set: { tags: tags.map(tag => tag.toLowerCase().trim()) } },            { new: true }        );        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        res.json({            success: true,            capsule        });    } catch (error) {        console.error('Error updating tags:', error);        res.status(500).json({ error: 'Failed to update tags' });    }};const getAllTags = async (req, res) => {    try {        const userId = req.query.userId;        const tags = await Capsule.aggregate([            { $match: { creator: new mongoose.Types.ObjectId(userId) } },            { $unwind: '$tags' },            { $group: { _id: '$tags', count: { $sum: 1 } } },            { $sort: { count: -1 } },            { $limit: 50 }        ]);        res.json({            tags: tags.map(t => ({ tag: t._id, count: t.count }))        });    } catch (error) {        console.error('Error fetching tags:', error);        res.status(500).json({ error: 'Failed to fetch tags' });    }};const updateReminder = async (req, res) => {    try {        const { capsuleId } = req.params;        const { enabled, daysBeforeDelivery } = req.body;        const capsule = await Capsule.findByIdAndUpdate(            capsuleId,            {                $set: {                    'reminder.enabled': enabled,                    'reminder.daysBeforeDelivery': daysBeforeDelivery || 1                }            },            { new: true }        );        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        res.json({            success: true,            capsule        });    } catch (error) {        console.error('Error updating reminder:', error);        res.status(500).json({ error: 'Failed to update reminder' });    }};const duplicateCapsule = async (req, res) => {    try {        const { capsuleId } = req.params;        const { scheduleDate } = req.body;        const originalCapsule = await Capsule.findById(capsuleId);        if (!originalCapsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        const duplicatedCapsule = await Capsule.create({            title: `${originalCapsule.title} (Copy)`,            message: originalCapsule.message,            category: originalCapsule.category,            tags: originalCapsule.tags,            priority: originalCapsule.priority,            files: originalCapsule.files,            scheduleDate: scheduleDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),             creator: originalCapsule.creator        });        await logActivity({            userId: originalCapsule.creator,            action: 'capsule_created',            entityType: 'capsule',            entityId: duplicatedCapsule._id,            details: { duplicatedFrom: capsuleId },            req        });        res.json({            success: true,            capsule: duplicatedCapsule,            message: 'Capsule duplicated successfully'        });    } catch (error) {        console.error('Error duplicating capsule:', error);        res.status(500).json({ error: 'Failed to duplicate capsule' });    }};const getTemplates = async (req, res) => {    try {        const userId = req.query.userId;        const templates = await Template.find({            $or: [                { creator: userId },                { isPublic: true }            ]        }).sort({ usageCount: -1, createdAt: -1 });        res.json({ templates });    } catch (error) {        console.error('Error fetching templates:', error);        res.status(500).json({ error: 'Failed to fetch templates' });    }};const createTemplate = async (req, res) => {    try {        const { capsuleId, name, description, isPublic } = req.body;        const capsule = await Capsule.findById(capsuleId);        if (!capsule) {            return res.status(404).json({ error: 'Capsule not found' });        }        const template = await Template.create({            name,            description,            category: capsule.category,            messageTemplate: capsule.message,            tags: capsule.tags,            priority: capsule.priority,            isPublic: isPublic || false,            creator: capsule.creator        });        res.json({            success: true,            template,            message: 'Template created successfully'        });    } catch (error) {        console.error('Error creating template:', error);        res.status(500).json({ error: 'Failed to create template' });    }};const createFromTemplate = async (req, res) => {    try {        const { templateId, title, scheduleDate, customMessage } = req.body;        const userId = req.query.userId;        const template = await Template.findById(templateId);        if (!template) {            return res.status(404).json({ error: 'Template not found' });        }        const capsule = await Capsule.create({            title: title || `Capsule from ${template.name}`,            message: customMessage || template.messageTemplate,            category: template.category,            tags: template.tags,            priority: template.priority,            scheduleDate,            creator: userId        });        template.usageCount += 1;        await template.save();        await logActivity({            userId,            action: 'capsule_created',            entityType: 'capsule',            entityId: capsule._id,            details: { fromTemplate: templateId },            req        });        res.json({            success: true,            capsule,            message: 'Capsule created from template'        });    } catch (error) {        console.error('Error creating from template:', error);        res.status(500).json({ error: 'Failed to create from template' });    }};const backupCapsules = async (req, res) => {    try {        const userId = req.query.userId;        const capsules = await Capsule.find({ creator: userId }).lean();        const backup = {            exportDate: new Date().toISOString(),            totalCapsules: capsules.length,            user: userId,            capsules: capsules.map(c => ({                title: c.title,                message: c.message,                category: c.category,                tags: c.tags,                priority: c.priority,                status: c.status,                scheduleDate: c.scheduleDate,                createdAt: c.createdAt,                starred: c.starred,                archived: c.archived            }))        };        res.setHeader('Content-Type', 'application/json');        res.setHeader('Content-Disposition', `attachment; filename=timecapsule-backup-${new Date().toISOString().split('T')[0]}.json`);        res.send(JSON.stringify(backup, null, 2));    } catch (error) {        console.error('Error creating backup:', error);        res.status(500).json({ error: 'Failed to create backup' });    }};const getAdvancedAnalytics = async (req, res) => {    try {        const userId = req.query.userId;        const [            totalStats,            categoryDistribution,            priorityDistribution,            deliveryRate,            topTags,            monthlyTrend        ] = await Promise.all([            Capsule.aggregate([                { $match: { creator: new mongoose.Types.ObjectId(userId) } },                {                    $group: {                        _id: null,                        total: { $sum: 1 },                        pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },                        delivered: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },                        failed: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },                        starred: { $sum: { $cond: ['$starred', 1, 0] } },                        archived: { $sum: { $cond: ['$archived', 1, 0] } }                    }                }            ]),            Capsule.aggregate([                { $match: { creator: new mongoose.Types.ObjectId(userId) } },                { $group: { _id: '$category', count: { $sum: 1 } } },                { $sort: { count: -1 } }            ]),            Capsule.aggregate([                { $match: { creator: new mongoose.Types.ObjectId(userId) } },                { $group: { _id: '$priority', count: { $sum: 1 } } }            ]),            Capsule.aggregate([                { $match: { creator: new mongoose.Types.ObjectId(userId), status: { $in: ['delivered', 'failed'] } } },                {                    $group: {                        _id: null,                        total: { $sum: 1 },                        successful: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } }                    }                }            ]),            Capsule.aggregate([                { $match: { creator: new mongoose.Types.ObjectId(userId) } },                { $unwind: '$tags' },                { $group: { _id: '$tags', count: { $sum: 1 } } },                { $sort: { count: -1 } },                { $limit: 10 }            ]),            Capsule.aggregate([                {                    $match: {                        creator: new mongoose.Types.ObjectId(userId),                        createdAt: { $gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) }                    }                },                {                    $group: {                        _id: {                            month: { $month: '$createdAt' },                            year: { $year: '$createdAt' }                        },                        count: { $sum: 1 }                    }                },                { $sort: { '_id.year': 1, '_id.month': 1 } }            ])        ]);        const deliverySuccessRate = deliveryRate[0]            ? Math.round((deliveryRate[0].successful / deliveryRate[0].total) * 100)            : 0;        res.json({            overview: totalStats[0] || {},            categoryDistribution,            priorityDistribution,            deliverySuccessRate,            topTags,            monthlyTrend        });    } catch (error) {        console.error('Error fetching advanced analytics:', error);        res.status(500).json({ error: 'Failed to fetch analytics' });    }};module.exports = {    createCapsule,    getMyCapsules,    getCapsule,    deleteCapsule,    getStatistics,    getActivity,    getCategories,    getRecentActivity,    exportReport,    searchCapsules,    shareCapsule,    toggleArchive,    toggleStarred,    bulkDelete,    bulkArchive,    updateTags,    getAllTags,    updateReminder,    duplicateCapsule,    getTemplates,    createTemplate,    createFromTemplate,    backupCapsules,    getAdvancedAnalytics};
+const Capsule = require('../Models/Capsule');
+const multer = require('multer');
+const path = require('path');
+const mongoose = require('mongoose');
+const { logActivity } = require('../utils/activityLogger');
+const Template = require('../Models/Template');
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILES = 5;
+const ALLOWED_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'mp4', 'mp3'];
+
+const storage = multer.diskStorage({
+    destination: './public/uploads/',
+    filename: (req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+        const ext = path.extname(file.originalname);
+        cb(null, `${uniqueSuffix}${ext}`);
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: MAX_FILE_SIZE },
+    fileFilter: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase().substring(1);
+        if (ALLOWED_TYPES.includes(ext)) {
+            return cb(null, true);
+        }
+        cb(new Error(`Invalid file type. Allowed: ${ALLOWED_TYPES.join(', ')}`));
+    }
+}).array('files', MAX_FILES); 
+const createCapsule = async (req, res) => {
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ success: false, error: err.message });
+        }
+
+        try {
+            const { title, message, scheduleDate, category, creator } = req.body;
+
+            if (!title || !message || !scheduleDate || !creator) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Title, message, schedule date, and creator are required'
+                });
+            }
+
+            if (new Date(scheduleDate) <= new Date()) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Schedule date must be in the future'
+                });
+            }
+
+            const files = req.files?.map(file => ({
+                filename: file.filename,
+                path: file.path.replace('public', ''),
+                mimetype: file.mimetype,
+                size: file.size
+            })) || [];
+
+            const capsule = await Capsule.create({
+                title: title.trim(),
+                message: message.trim(),
+                category: category || 'general',
+                files,
+                scheduleDate,
+                creator: mongoose.Types.ObjectId(creator)
+            });
+
+            await logActivity({
+                userId: creator,
+                action: 'capsule_created',
+                entityType: 'capsule',
+                entityId: capsule._id,
+                details: { title, category, fileCount: files.length },
+                req
+            });
+
+            res.status(201).json({
+                success: true,
+                message: 'Capsule created successfully',
+                capsule
+            });
+        } catch (err) {
+            console.error('Create capsule error:', err.message);
+            res.status(500).json({ success: false, error: 'Failed to create capsule' });
+        }
+    });
+};
+const getMyCapsules = async (req, res) => {
+    try {
+        const userId = req.query.userId || req.user?._id;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'User ID is required' });
+        }
+
+        const { status, category, limit = 50, skip = 0 } = req.query;
+        const query = { creator: userId };
+        
+        if (status) query.status = status;
+        if (category) query.category = category;
+
+        const [capsules, total] = await Promise.all([
+            Capsule.find(query)
+                .select('-__v')
+                .sort({ scheduleDate: 1 })
+                .limit(parseInt(limit))
+                .skip(parseInt(skip))
+                .lean(),
+            Capsule.countDocuments(query)
+        ]);
+
+        res.json({
+            success: true,
+            capsules,
+            pagination: {
+                total,
+                limit: parseInt(limit),
+                skip: parseInt(skip),
+                hasMore: total > parseInt(skip) + capsules.length
+            }
+        });
+    } catch (error) {
+        console.error('Get capsules error:', error.message);
+        res.status(500).json({ success: false, error: 'Failed to fetch capsules' });
+    }
+};
+const getCapsule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, error: 'Invalid capsule ID' });
+        }
+
+        const capsule = await Capsule.findOne({
+            _id: id,
+            creator: req.user._id
+        }).select('-__v').lean();
+
+        if (!capsule) {
+            return res.status(404).json({ success: false, error: 'Capsule not found' });
+        }
+
+        res.json({ success: true, capsule });
+    } catch (err) {
+        console.error('Get capsule error:', err.message);
+        res.status(500).json({ success: false, error: 'Failed to fetch capsule' });
+    }
+};
+const deleteCapsule = async (req, res) => {
+    try {
+        const capsuleId = req.params.id;
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        await Capsule.findByIdAndDelete(capsuleId);
+        if (capsule.files && capsule.files.length > 0) {
+            const fs = require('fs').promises;
+            const path = require('path');
+            for (const file of capsule.files) {
+                try {
+                    const filePath = path.join(__dirname, '../public', file.path);
+                    await fs.unlink(filePath);
+                } catch (err) {
+                    console.error('Error deleting file:', err);
+                }
+            }
+        }
+        res.json({ 
+            success: true, 
+            message: 'Capsule deleted successfully',
+            deletedCapsule: capsule 
+        });
+    } catch (error) {
+        console.error('Delete capsule error:', error);
+        res.status(500).json({ error: 'Failed to delete capsule' });
+    }
+};
+const getStatistics = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        const [totalCapsules, scheduledCapsules, deliveredCapsules, categories] = await Promise.all([
+            Capsule.countDocuments({ creator: userId }),
+            Capsule.countDocuments({ creator: userId, status: 'pending' }),
+            Capsule.countDocuments({ creator: userId, status: 'delivered' }),
+            Capsule.distinct('category', { creator: userId })
+        ]);
+        const [lastMonthTotal, lastMonthScheduled, lastMonthDelivered, lastMonthCategories] = await Promise.all([
+            Capsule.countDocuments({ 
+                creator: userId,
+                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+            }),
+            Capsule.countDocuments({ 
+                creator: userId,
+                status: 'pending',
+                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+            }),
+            Capsule.countDocuments({ 
+                creator: userId,
+                status: 'delivered',
+                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+            }),
+            Capsule.distinct('category', { 
+                creator: userId,
+                createdAt: { $gte: startOfLastMonth, $lte: endOfLastMonth }
+            })
+        ]);
+        const calculateChange = (current, previous) => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - previous) / previous) * 100);
+        };
+        res.json({
+            totalCapsules,
+            scheduledCapsules,
+            deliveredCapsules,
+            uniqueCategories: categories.length,
+            totalCapsulesChange: calculateChange(totalCapsules, lastMonthTotal),
+            scheduledCapsulesChange: calculateChange(scheduledCapsules, lastMonthScheduled),
+            deliveredCapsulesChange: calculateChange(deliveredCapsules, lastMonthDelivered),
+            categoriesChange: calculateChange(categories.length, lastMonthCategories.length)
+        });
+    } catch (error) {
+        console.error('Error fetching statistics:', error);
+        res.status(500).json({ error: 'Failed to fetch statistics' });
+    }
+};
+const getActivity = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const period = req.query.period || 'week';
+        const now = new Date();
+        let startDate, endDate, format;
+        switch (period) {
+            case 'week':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+                endDate = now;
+                format = '%Y-%m-%d';
+                break;
+            case 'month':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                endDate = now;
+                format = '%Y-%m-%d';
+                break;
+            case 'year':
+                startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+                endDate = now;
+                format = '%Y-%m';
+                break;
+            default:
+                return res.status(400).json({ error: 'Invalid period' });
+        }
+        const [created, delivered] = await Promise.all([
+            Capsule.aggregate([
+                {
+                    $match: {
+                        creator: userId,
+                        createdAt: { $gte: startDate, $lte: endDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format, date: '$createdAt' } },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id': 1 } }
+            ]),
+            Capsule.aggregate([
+                {
+                    $match: {
+                        creator: userId,
+                        status: 'delivered',
+                        createdAt: { $gte: startDate, $lte: endDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { $dateToString: { format, date: '$createdAt' } },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id': 1 } }
+            ])
+        ]);
+        const dates = [];
+        const currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+            dates.push(currentDate.toISOString().split('T')[0]);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        const createdMap = new Map(created.map(item => [item._id, item.count]));
+        const deliveredMap = new Map(delivered.map(item => [item._id, item.count]));
+        const labels = dates;
+        const createdData = dates.map(date => createdMap.get(date) || 0);
+        const deliveredData = dates.map(date => deliveredMap.get(date) || 0);
+        res.json({
+            labels,
+            created: createdData,
+            delivered: deliveredData
+        });
+    } catch (error) {
+        console.error('Error fetching activity data:', error);
+        res.status(500).json({ error: 'Failed to fetch activity data' });
+    }
+};
+const getCategories = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const categories = await Capsule.aggregate([
+            {
+                $match: { creator: userId }
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]);
+        res.json({
+            labels: categories.map(cat => cat._id),
+            values: categories.map(cat => cat.count)
+        });
+    } catch (error) {
+        console.error('Error fetching categories data:', error);
+        res.status(500).json({ error: 'Failed to fetch categories data' });
+    }
+};
+const getRecentActivity = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const activities = await Capsule.find({ creator: userId })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('title status createdAt scheduleDate')
+            .lean();
+        const formattedActivities = activities.map(activity => {
+            let type = 'created';
+            if (activity.status === 'delivered') type = 'delivered';
+            else if (activity.status === 'failed') type = 'failed';
+            else if (activity.scheduleDate) type = 'scheduled';
+            return {
+                title: activity.title,
+                type,
+                timestamp: activity.createdAt
+            };
+        });
+        res.json(formattedActivities);
+    } catch (error) {
+        console.error('Error fetching recent activity:', error);
+        res.status(500).json({ error: 'Failed to fetch recent activity' });
+    }
+};
+const exportReport = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const capsules = await Capsule.find({ creator: userId })
+            .sort({ createdAt: -1 })
+            .lean();
+        const csvHeader = 'Title,Category,Status,Created At,Scheduled Date\n';
+        const csvRows = capsules.map(capsule => {
+            return `"${capsule.title}","${capsule.category}","${capsule.status}","${capsule.createdAt.toISOString()}","${capsule.scheduleDate?.toISOString() || ''}"\n`;
+        });
+        const csvContent = csvHeader + csvRows.join('');
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=capsule-report-${new Date().toISOString().split('T')[0]}.csv`);
+        res.send(csvContent);
+    } catch (error) {
+        console.error('Error exporting report:', error);
+        res.status(500).json({ error: 'Failed to export report' });
+    }
+};
+const searchCapsules = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const { 
+            query, 
+            category, 
+            status, 
+            tags, 
+            priority, 
+            starred, 
+            archived,
+            dateFrom,
+            dateTo,
+            sortBy = 'createdAt',
+            sortOrder = 'desc',
+            page = 1,
+            limit = 20
+        } = req.query;
+        const filter = { creator: userId };
+        if (query) {
+            filter.$text = { $search: query };
+        }
+        if (category) {
+            filter.category = category;
+        }
+        if (status) {
+            filter.status = status;
+        }
+        if (tags) {
+            const tagArray = tags.split(',').map(tag => tag.trim());
+            filter.tags = { $in: tagArray };
+        }
+        if (priority) {
+            filter.priority = priority;
+        }
+        if (starred !== undefined) {
+            filter.starred = starred === 'true';
+        }
+        if (archived !== undefined) {
+            filter.archived = archived === 'true';
+        } else {
+            filter.archived = false;
+        }
+        if (dateFrom || dateTo) {
+            filter.scheduleDate = {};
+            if (dateFrom) filter.scheduleDate.$gte = new Date(dateFrom);
+            if (dateTo) filter.scheduleDate.$lte = new Date(dateTo);
+        }
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const capsules = await Capsule.find(filter)
+            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean();
+        const total = await Capsule.countDocuments(filter);
+        res.json({
+            capsules,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Error searching capsules:', error);
+        res.status(500).json({ error: 'Failed to search capsules' });
+    }
+};
+const shareCapsule = async (req, res) => {
+    try {
+        const { capsuleId, userEmail, permission = 'view' } = req.body;
+        const User = require('../Models/User');
+        const sharedUser = await User.findOne({ email: userEmail });
+        if (!sharedUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            {
+                $addToSet: {
+                    sharedWith: {
+                        user: sharedUser._id,
+                        permissions: permission,
+                        sharedAt: new Date()
+                    }
+                }
+            },
+            { new: true }
+        );
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        res.json({
+            success: true,
+            message: `Capsule shared with ${userEmail}`,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error sharing capsule:', error);
+        res.status(500).json({ error: 'Failed to share capsule' });
+    }
+};
+const toggleArchive = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        capsule.archived = !capsule.archived;
+        await capsule.save();
+        res.json({
+            success: true,
+            archived: capsule.archived,
+            message: capsule.archived ? 'Capsule archived' : 'Capsule unarchived'
+        });
+    } catch (error) {
+        console.error('Error toggling archive:', error);
+        res.status(500).json({ error: 'Failed to toggle archive status' });
+    }
+};
+const toggleStarred = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        capsule.starred = !capsule.starred;
+        await capsule.save();
+        res.json({
+            success: true,
+            starred: capsule.starred,
+            message: capsule.starred ? 'Capsule starred' : 'Capsule unstarred'
+        });
+    } catch (error) {
+        console.error('Error toggling starred:', error);
+        res.status(500).json({ error: 'Failed to toggle starred status' });
+    }
+};
+const bulkDelete = async (req, res) => {
+    try {
+        const { capsuleIds } = req.body;
+        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {
+            return res.status(400).json({ error: 'Invalid capsule IDs' });
+        }
+        const result = await Capsule.deleteMany({
+            _id: { $in: capsuleIds }
+        });
+        res.json({
+            success: true,
+            deletedCount: result.deletedCount,
+            message: `${result.deletedCount} capsule(s) deleted`
+        });
+    } catch (error) {
+        console.error('Error bulk deleting capsules:', error);
+        res.status(500).json({ error: 'Failed to delete capsules' });
+    }
+};
+const bulkArchive = async (req, res) => {
+    try {
+        const { capsuleIds, archive = true } = req.body;
+        if (!Array.isArray(capsuleIds) || capsuleIds.length === 0) {
+            return res.status(400).json({ error: 'Invalid capsule IDs' });
+        }
+        const result = await Capsule.updateMany(
+            { _id: { $in: capsuleIds } },
+            { $set: { archived: archive } }
+        );
+        res.json({
+            success: true,
+            modifiedCount: result.modifiedCount,
+            message: `${result.modifiedCount} capsule(s) ${archive ? 'archived' : 'unarchived'}`
+        });
+    } catch (error) {
+        console.error('Error bulk archiving capsules:', error);
+        res.status(500).json({ error: 'Failed to archive capsules' });
+    }
+};
+const updateTags = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { tags } = req.body;
+        if (!Array.isArray(tags)) {
+            return res.status(400).json({ error: 'Tags must be an array' });
+        }
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            { $set: { tags: tags.map(tag => tag.toLowerCase().trim()) } },
+            { new: true }
+        );
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        res.json({
+            success: true,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error updating tags:', error);
+        res.status(500).json({ error: 'Failed to update tags' });
+    }
+};
+const getAllTags = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const tags = await Capsule.aggregate([
+            { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+            { $unwind: '$tags' },
+            { $group: { _id: '$tags', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 50 }
+        ]);
+        res.json({
+            tags: tags.map(t => ({ tag: t._id, count: t.count }))
+        });
+    } catch (error) {
+        console.error('Error fetching tags:', error);
+        res.status(500).json({ error: 'Failed to fetch tags' });
+    }
+};
+const updateReminder = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { enabled, daysBeforeDelivery } = req.body;
+        const capsule = await Capsule.findByIdAndUpdate(
+            capsuleId,
+            {
+                $set: {
+                    'reminder.enabled': enabled,
+                    'reminder.daysBeforeDelivery': daysBeforeDelivery || 1
+                }
+            },
+            { new: true }
+        );
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        res.json({
+            success: true,
+            capsule
+        });
+    } catch (error) {
+        console.error('Error updating reminder:', error);
+        res.status(500).json({ error: 'Failed to update reminder' });
+    }
+};
+const duplicateCapsule = async (req, res) => {
+    try {
+        const { capsuleId } = req.params;
+        const { scheduleDate } = req.body;
+        const originalCapsule = await Capsule.findById(capsuleId);
+        if (!originalCapsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        const duplicatedCapsule = await Capsule.create({
+            title: `${originalCapsule.title} (Copy)`,
+            message: originalCapsule.message,
+            category: originalCapsule.category,
+            tags: originalCapsule.tags,
+            priority: originalCapsule.priority,
+            files: originalCapsule.files,
+            scheduleDate: scheduleDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 
+            creator: originalCapsule.creator
+        });
+        await logActivity({
+            userId: originalCapsule.creator,
+            action: 'capsule_created',
+            entityType: 'capsule',
+            entityId: duplicatedCapsule._id,
+            details: { duplicatedFrom: capsuleId },
+            req
+        });
+        res.json({
+            success: true,
+            capsule: duplicatedCapsule,
+            message: 'Capsule duplicated successfully'
+        });
+    } catch (error) {
+        console.error('Error duplicating capsule:', error);
+        res.status(500).json({ error: 'Failed to duplicate capsule' });
+    }
+};
+const getTemplates = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const templates = await Template.find({
+            $or: [
+                { creator: userId },
+                { isPublic: true }
+            ]
+        }).sort({ usageCount: -1, createdAt: -1 });
+        res.json({ templates });
+    } catch (error) {
+        console.error('Error fetching templates:', error);
+        res.status(500).json({ error: 'Failed to fetch templates' });
+    }
+};
+const createTemplate = async (req, res) => {
+    try {
+        const { capsuleId, name, description, isPublic } = req.body;
+        const capsule = await Capsule.findById(capsuleId);
+        if (!capsule) {
+            return res.status(404).json({ error: 'Capsule not found' });
+        }
+        const template = await Template.create({
+            name,
+            description,
+            category: capsule.category,
+            messageTemplate: capsule.message,
+            tags: capsule.tags,
+            priority: capsule.priority,
+            isPublic: isPublic || false,
+            creator: capsule.creator
+        });
+        res.json({
+            success: true,
+            template,
+            message: 'Template created successfully'
+        });
+    } catch (error) {
+        console.error('Error creating template:', error);
+        res.status(500).json({ error: 'Failed to create template' });
+    }
+};
+const createFromTemplate = async (req, res) => {
+    try {
+        const { templateId, title, scheduleDate, customMessage } = req.body;
+        const userId = req.query.userId;
+        const template = await Template.findById(templateId);
+        if (!template) {
+            return res.status(404).json({ error: 'Template not found' });
+        }
+        const capsule = await Capsule.create({
+            title: title || `Capsule from ${template.name}`,
+            message: customMessage || template.messageTemplate,
+            category: template.category,
+            tags: template.tags,
+            priority: template.priority,
+            scheduleDate,
+            creator: userId
+        });
+        template.usageCount += 1;
+        await template.save();
+        await logActivity({
+            userId,
+            action: 'capsule_created',
+            entityType: 'capsule',
+            entityId: capsule._id,
+            details: { fromTemplate: templateId },
+            req
+        });
+        res.json({
+            success: true,
+            capsule,
+            message: 'Capsule created from template'
+        });
+    } catch (error) {
+        console.error('Error creating from template:', error);
+        res.status(500).json({ error: 'Failed to create from template' });
+    }
+};
+const backupCapsules = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const capsules = await Capsule.find({ creator: userId }).lean();
+        const backup = {
+            exportDate: new Date().toISOString(),
+            totalCapsules: capsules.length,
+            user: userId,
+            capsules: capsules.map(c => ({
+                title: c.title,
+                message: c.message,
+                category: c.category,
+                tags: c.tags,
+                priority: c.priority,
+                status: c.status,
+                scheduleDate: c.scheduleDate,
+                createdAt: c.createdAt,
+                starred: c.starred,
+                archived: c.archived
+            }))
+        };
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename=timecapsule-backup-${new Date().toISOString().split('T')[0]}.json`);
+        res.send(JSON.stringify(backup, null, 2));
+    } catch (error) {
+        console.error('Error creating backup:', error);
+        res.status(500).json({ error: 'Failed to create backup' });
+    }
+};
+const getAdvancedAnalytics = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        const [
+            totalStats,
+            categoryDistribution,
+            priorityDistribution,
+            deliveryRate,
+            topTags,
+            monthlyTrend
+        ] = await Promise.all([
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+                        delivered: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } },
+                        failed: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } },
+                        starred: { $sum: { $cond: ['$starred', 1, 0] } },
+                        archived: { $sum: { $cond: ['$archived', 1, 0] } }
+                    }
+                }
+            ]),
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $group: { _id: '$category', count: { $sum: 1 } } },
+                { $sort: { count: -1 } }
+            ]),
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $group: { _id: '$priority', count: { $sum: 1 } } }
+            ]),
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId), status: { $in: ['delivered', 'failed'] } } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        successful: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } }
+                    }
+                }
+            ]),
+            Capsule.aggregate([
+                { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+                { $unwind: '$tags' },
+                { $group: { _id: '$tags', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
+            ]),
+            Capsule.aggregate([
+                {
+                    $match: {
+                        creator: new mongoose.Types.ObjectId(userId),
+                        createdAt: { $gte: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' }
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ])
+        ]);
+        const deliverySuccessRate = deliveryRate[0]
+            ? Math.round((deliveryRate[0].successful / deliveryRate[0].total) * 100)
+            : 0;
+        res.json({
+            overview: totalStats[0] || {},
+            categoryDistribution,
+            priorityDistribution,
+            deliverySuccessRate,
+            topTags,
+            monthlyTrend
+        });
+    } catch (error) {
+        console.error('Error fetching advanced analytics:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+};
+module.exports = {
+    createCapsule,
+    getMyCapsules,
+    getCapsule,
+    deleteCapsule,
+    getStatistics,
+    getActivity,
+    getCategories,
+    getRecentActivity,
+    exportReport,
+    searchCapsules,
+    shareCapsule,
+    toggleArchive,
+    toggleStarred,
+    bulkDelete,
+    bulkArchive,
+    updateTags,
+    getAllTags,
+    updateReminder,
+    duplicateCapsule,
+    getTemplates,
+    createTemplate,
+    createFromTemplate,
+    backupCapsules,
+    getAdvancedAnalytics
+};
