@@ -1,37 +1,1 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #EEF1DA;
-    color: #2D5D7B;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-}
-header {
-    background: #c8e2e8;
-    padding: 20px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-.steps {
-    margin: 50px auto;
-    max-width: 800px;
-}
-.step {
-    background: #98D2C0;
-    padding: 20px;
-    margin: 15px 0;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-.btn {
-    display: inline-block;
-    margin: 20px;
-    padding: 10px 20px;
-    background: #2D5D7B;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: 0.3s;
-}
-.btn:hover {
-    background: #1B3A4B;
-}
+body {    font-family: Arial, sans-serif;    background-color: #EEF1DA;    color: #2D5D7B;    margin: 0;    padding: 0;    text-align: center;}header {    background: #c8e2e8;    padding: 20px;    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);}.steps {    margin: 50px auto;    max-width: 800px;}.step {    background: #98D2C0;    padding: 20px;    margin: 15px 0;    border-radius: 10px;    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);}.btn {    display: inline-block;    margin: 20px;    padding: 10px 20px;    background: #2D5D7B;    color: white;    text-decoration: none;    border-radius: 5px;    transition: 0.3s;}.btn:hover {    background: #1B3A4B;}
