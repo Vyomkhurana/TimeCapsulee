@@ -52,35 +52,50 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use('/users', usersRouter);
 app.use('/api/capsules', capsuleRouter);
 app.get('/health', (req, res) => {
+  const dbStatus = db.isConnected() ? 'connected' : 'disconnected';
+  const memUsage = process.memoryUsage();
   res.status(200).json({ 
-    status: 'ok', 
+    status: 'ok',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    version: '2.0.0'
+    uptime: Math.floor(process.uptime()),
+    memory: {
+      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`
+    },
+    version: '3.1.0',
+    nodeVersion: process.version
   });
 });
 app.get('/api', (req, res) => {
   res.json({
     name: 'Time Capsule API',
-    version: '2.0.0',
+    version: '3.1.0',
     description: 'Digital time capsule application with advanced features',
+    documentation: '/api/docs',
     endpoints: {
       capsules: '/api/capsules',
       users: '/users',
-      health: '/health'
+      health: '/health',
+      templates: '/api/templates'
     },
     features: [
       'Advanced search & filtering',
-      'Capsule sharing',
+      'Capsule sharing & collaboration',
       'Tags & categories',
-      'Archive & star',
+      'Archive & star favorites',
       'Bulk operations',
-      'Reminders',
-      'Analytics & reports',
-      'Rate limiting',
-      'Input validation'
-    ]
+      'Smart reminders',
+      'Analytics & insights',
+      'Rate limiting & security',
+      'Input validation & sanitization',
+      'File uploads with compression',
+      'Email notifications',
+      'Template system'
+    ],
+    status: 'active',
+    lastUpdated: '2025-11-12'
   });
 });
 const htmlPages = [
@@ -106,38 +121,62 @@ app.use((req, res, next) => {
   next(createError(404, 'Page not found'));
 });
 app.use((err, req, res, next) => {
+  const isDev = process.env.NODE_ENV === 'development';
+  const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
   console.error('Error occurred:', {
+    errorId,
     message: err.message,
     status: err.status || 500,
     path: req.path,
     method: req.method,
-    timestamp: new Date().toISOString()
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    timestamp: new Date().toISOString(),
+    stack: isDev ? err.stack : undefined
   });
-  res.locals.message = err.message;
-  res.locals.error = process.env.NODE_ENV === 'development' ? err : {};
+
   res.status(err.status || 500);
+  
   if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-    res.json({
+    return res.json({
       success: false,
-      message: err.message,
-      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      message: err.message || 'An error occurred',
+      errorId,
+      ...(isDev && { stack: err.stack, details: err })
     });
+  }
+
+  const errorPagePath = path.join(__dirname, 'public', 'Html', 'error.html');
+  if (fs.existsSync(errorPagePath)) {
+    res.sendFile(errorPagePath);
   } else {
-    const errorPagePath = path.join(__dirname, 'public', 'Html', 'error.html');
-    if (fs.existsSync(errorPagePath)) {
-      res.sendFile(errorPagePath);
-    } else {
-      res.send(`
-        <html>
-          <head><title>Error</title></head>
-          <body>
-            <h1>${err.status || 500} Error</h1>
-            <p>${err.message}</p>
-            ${process.env.NODE_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}
-          </body>
-        </html>
-      `);
-    }
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Error ${err.status || 500}</title>
+          <style>
+            body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}
+            .error-container{text-align:center;max-width:600px;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:40px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+            h1{font-size:4rem;margin:0 0 20px}
+            p{font-size:1.2rem;opacity:0.9}
+            .error-id{font-size:0.85rem;opacity:0.7;margin-top:20px}
+            a{color:#fff;text-decoration:none;padding:12px 24px;background:rgba(255,255,255,0.2);border-radius:8px;display:inline-block;margin-top:20px;transition:all 0.3s}
+            a:hover{background:rgba(255,255,255,0.3);transform:translateY(-2px)}
+          </style>
+        </head>
+        <body>
+          <div class="error-container">
+            <h1>${err.status || 500}</h1>
+            <p>${err.message || 'Something went wrong'}</p>
+            ${isDev ? `<pre style="text-align:left;background:rgba(0,0,0,0.3);padding:15px;border-radius:8px;overflow:auto;max-height:300px;font-size:0.8rem">${err.stack}</pre>` : ''}
+            <div class="error-id">Error ID: ${errorId}</div>
+            <a href="/">Return to Home</a>
+          </div>
+        </body>
+      </html>
+    `);
   }
 });
 console.log('🚀 Starting scheduler...');

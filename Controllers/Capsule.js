@@ -32,59 +32,110 @@ const upload = multer({
 const createCapsule = async (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
-            return res.status(400).json({ success: false, error: err.message });
+            const errorMsg = err.code === 'LIMIT_FILE_SIZE' 
+                ? `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`
+                : err.message;
+            return res.status(400).json({ success: false, error: errorMsg });
         }
 
         try {
-            const { title, message, scheduleDate, category, creator } = req.body;
+            const { title, message, scheduleDate, category, creator, tags } = req.body;
 
-            if (!title || !message || !scheduleDate || !creator) {
+            if (!title?.trim() || !message?.trim() || !scheduleDate || !creator) {
                 return res.status(400).json({
                     success: false,
                     error: 'Title, message, schedule date, and creator are required'
                 });
             }
 
-            if (new Date(scheduleDate) <= new Date()) {
+            const scheduleDateObj = new Date(scheduleDate);
+            const now = new Date();
+            
+            if (isNaN(scheduleDateObj.getTime())) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid schedule date format'
+                });
+            }
+
+            if (scheduleDateObj <= now) {
                 return res.status(400).json({
                     success: false,
                     error: 'Schedule date must be in the future'
                 });
             }
 
+            const maxFutureDate = new Date();
+            maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 50);
+            
+            if (scheduleDateObj > maxFutureDate) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Schedule date cannot be more than 50 years in the future'
+                });
+            }
+
             const files = req.files?.map(file => ({
                 filename: file.filename,
-                path: file.path.replace('public', ''),
+                originalName: file.originalname,
+                path: file.path.replace(/\\/g, '/').replace('public', ''),
                 mimetype: file.mimetype,
                 size: file.size
             })) || [];
 
-            const capsule = await Capsule.create({
+            const capsuleData = {
                 title: title.trim(),
                 message: message.trim(),
-                category: category || 'general',
+                category: category?.trim() || 'general',
                 files,
-                scheduleDate,
+                scheduleDate: scheduleDateObj,
                 creator: mongoose.Types.ObjectId(creator)
-            });
+            };
+
+            if (tags && Array.isArray(tags)) {
+                capsuleData.tags = tags.filter(tag => tag?.trim()).map(tag => tag.trim());
+            }
+
+            const capsule = await Capsule.create(capsuleData);
 
             await logActivity({
                 userId: creator,
                 action: 'capsule_created',
                 entityType: 'capsule',
                 entityId: capsule._id,
-                details: { title, category, fileCount: files.length },
+                details: { 
+                    title: capsule.title, 
+                    category: capsule.category, 
+                    fileCount: files.length,
+                    scheduleDate: scheduleDateObj 
+                },
                 req
             });
 
             res.status(201).json({
                 success: true,
-                message: 'Capsule created successfully',
-                capsule
+                message: 'Time capsule created successfully! It will be delivered on the scheduled date.',
+                capsule: {
+                    _id: capsule._id,
+                    title: capsule.title,
+                    category: capsule.category,
+                    scheduleDate: capsule.scheduleDate,
+                    fileCount: files.length,
+                    createdAt: capsule.createdAt
+                }
             });
         } catch (err) {
-            console.error('Create capsule error:', err.message);
-            res.status(500).json({ success: false, error: 'Failed to create capsule' });
+            console.error('Create capsule error:', err.message, err.stack);
+            
+            if (err.name === 'ValidationError') {
+                const messages = Object.values(err.errors).map(e => e.message);
+                return res.status(400).json({ success: false, error: messages[0] });
+            }
+            
+            res.status(500).json({ 
+                success: false, 
+                error: 'Failed to create capsule. Please try again.' 
+            });
         }
     });
 };

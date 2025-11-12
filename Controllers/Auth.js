@@ -90,23 +90,31 @@ const signup = async (req, res) => {
         });
 
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY });
-        await Session.create({ userId: user._id, token });
+        await Session.create({
+            userId: user._id,
+            token,
+            userAgent: req.get('user-agent'),
+            ipAddress: req.ip
+        });
 
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: COOKIE_MAX_AGE
+            maxAge: COOKIE_MAX_AGE,
+            path: '/'
         });
 
         res.status(201).json({
             success: true,
-            message: 'User created successfully',
+            message: 'Account created successfully! Welcome to TimeCapsule',
             user: {
                 _id: user._id,
                 username: user.username,
-                email: user.email
-            }
+                email: user.email,
+                createdAt: user.createdAt
+            },
+            token
         });
     } catch (err) {
         console.error('Signup error:', err.message);
@@ -146,24 +154,35 @@ const login = async (req, res) => {
         
         await Promise.all([
             Session.deleteMany({ userId: user._id }),
-            Session.create({ userId: user._id, token })
+            Session.create({
+                userId: user._id,
+                token,
+                userAgent: req.get('user-agent'),
+                ipAddress: req.ip
+            })
         ]);
 
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: COOKIE_MAX_AGE
+            maxAge: COOKIE_MAX_AGE,
+            path: '/'
         });
+
+        user.lastLogin = new Date();
+        await user.save();
 
         res.status(200).json({
             success: true,
-            message: 'Login successful',
+            message: 'Login successful! Welcome back',
             user: {
                 _id: user._id,
                 username: user.username,
-                email: user.email
-            }
+                email: user.email,
+                lastLogin: user.lastLogin
+            },
+            token
         });
     } catch (err) {
         console.error('Login error:', err.message);
