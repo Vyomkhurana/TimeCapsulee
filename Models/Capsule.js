@@ -1,1 +1,166 @@
-const mongoose = require('mongoose');const capsuleSchema = new mongoose.Schema({    title: {        type: String,        required: [true, 'Title is required'],        trim: true,        maxlength: [200, 'Title cannot be more than 200 characters']    },    message: {        type: String,        required: [true, 'Message is required'],        maxlength: [5000, 'Message cannot be more than 5000 characters']    },    category: {        type: String,        required: [true, 'Category is required'],        enum: {            values: ['personal', 'special', 'academic', 'mental', 'business', 'legacy', 'social'],            message: '{VALUE} is not a valid category'        }    },    tags: [{        type: String,        trim: true,        lowercase: true    }],    priority: {        type: String,        enum: ['low', 'medium', 'high', 'urgent'],        default: 'medium'    },    sharedWith: [{        user: {            type: mongoose.Schema.Types.ObjectId,            ref: 'User'        },        permissions: {            type: String,            enum: ['view', 'edit'],            default: 'view'        },        sharedAt: {            type: Date,            default: Date.now        }    }],    archived: {        type: Boolean,        default: false,        index: true    },    reminder: {        enabled: {            type: Boolean,            default: false        },        daysBeforeDelivery: {            type: Number,            default: 1,            min: 1,            max: 365        },        sent: {            type: Boolean,            default: false        }    },    views: {        type: Number,        default: 0    },    lastViewed: {        type: Date    },    starred: {        type: Boolean,        default: false    },    files: [{        filename: String,        path: String,        mimetype: String    }],    scheduleDate: {        type: Date,        required: [true, 'Schedule date is required'],        validate: {            validator: function(value) {                return value > Date.now();            },            message: 'Schedule date must be in the future'        }    },    creator: {        type: mongoose.Schema.Types.ObjectId,        ref: 'User',        required: true,        index: true     },    status: {        type: String,        enum: ['pending', 'delivered', 'failed'],        default: 'pending',        index: true     },    error: {        type: String,        default: null    },    createdAt: {        type: Date,        default: Date.now,        index: true     }}, {    timestamps: true });capsuleSchema.index({ creator: 1, status: 1 });capsuleSchema.index({ scheduleDate: 1, status: 1 });capsuleSchema.index({ creator: 1, category: 1 });capsuleSchema.index({ tags: 1 });capsuleSchema.index({ creator: 1, starred: 1 });capsuleSchema.index({ creator: 1, archived: 1 });capsuleSchema.index({ title: 'text', message: 'text', tags: 'text' });capsuleSchema.virtual('timeUntilDelivery').get(function() {    return this.scheduleDate - Date.now();});capsuleSchema.methods.isReadyForDelivery = function() {    return this.status === 'pending' && this.scheduleDate <= Date.now();};capsuleSchema.methods.shouldSendReminder = function() {    if (!this.reminder.enabled || this.reminder.sent || this.status !== 'pending') {        return false;    }    const daysUntilDelivery = (this.scheduleDate - Date.now()) / (1000 * 60 * 60 * 24);    return daysUntilDelivery <= this.reminder.daysBeforeDelivery && daysUntilDelivery > 0;};capsuleSchema.methods.incrementViews = function() {    this.views += 1;    this.lastViewed = new Date();    return this.save();};capsuleSchema.statics.findReadyForDelivery = function() {    return this.find({        status: 'pending',        scheduleDate: { $lte: new Date() }    });};capsuleSchema.statics.findNeedingReminders = function() {    const now = new Date();    return this.find({        status: 'pending',        'reminder.enabled': true,        'reminder.sent': false,        scheduleDate: { $gt: now }    }).populate('creator');};module.exports = mongoose.model('Capsule', capsuleSchema);
+const mongoose = require('mongoose');
+const capsuleSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: [true, 'Title is required'],
+        trim: true,
+        maxlength: [200, 'Title cannot be more than 200 characters']
+    },
+    message: {
+        type: String,
+        required: [true, 'Message is required'],
+        maxlength: [5000, 'Message cannot be more than 5000 characters']
+    },
+    category: {
+        type: String,
+        required: [true, 'Category is required'],
+        enum: {
+            values: ['personal', 'special', 'academic', 'mental', 'business', 'legacy', 'social'],
+            message: '{VALUE} is not a valid category'
+        }
+    },
+    tags: [{
+        type: String,
+        trim: true,
+        lowercase: true
+    }],
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'urgent'],
+        default: 'medium'
+    },
+    sharedWith: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        permissions: {
+            type: String,
+            enum: ['view', 'edit'],
+            default: 'view'
+        },
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    archived: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    reminder: {
+        enabled: {
+            type: Boolean,
+            default: false
+        },
+        daysBeforeDelivery: {
+            type: Number,
+            default: 1,
+            min: 1,
+            max: 365
+        },
+        sent: {
+            type: Boolean,
+            default: false
+        }
+    },
+    views: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    lastViewed: {
+        type: Date,
+        index: true
+    },
+    starred: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    metadata: {
+        deviceType: String,
+        browser: String,
+        location: String
+    },
+    files: [{
+        filename: String,
+        path: String,
+        mimetype: String
+    }],
+    scheduleDate: {
+        type: Date,
+        required: [true, 'Schedule date is required'],
+        validate: {
+            validator: function(value) {
+                return value > Date.now();
+            },
+            message: 'Schedule date must be in the future'
+        }
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true 
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'delivered', 'failed'],
+        default: 'pending',
+        index: true 
+    },
+    error: {
+        type: String,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        index: true 
+    }
+}, {
+    timestamps: true 
+});
+capsuleSchema.index({ creator: 1, status: 1 });
+capsuleSchema.index({ scheduleDate: 1, status: 1 });
+capsuleSchema.index({ creator: 1, category: 1 });
+capsuleSchema.index({ tags: 1 });
+capsuleSchema.index({ creator: 1, starred: 1 });
+capsuleSchema.index({ creator: 1, archived: 1 });
+capsuleSchema.index({ title: 'text', message: 'text', tags: 'text' });
+capsuleSchema.virtual('timeUntilDelivery').get(function() {
+    return this.scheduleDate - Date.now();
+});
+capsuleSchema.methods.isReadyForDelivery = function() {
+    return this.status === 'pending' && this.scheduleDate <= Date.now();
+};
+capsuleSchema.methods.shouldSendReminder = function() {
+    if (!this.reminder.enabled || this.reminder.sent || this.status !== 'pending') {
+        return false;
+    }
+    const daysUntilDelivery = (this.scheduleDate - Date.now()) / (1000 * 60 * 60 * 24);
+    return daysUntilDelivery <= this.reminder.daysBeforeDelivery && daysUntilDelivery > 0;
+};
+capsuleSchema.methods.incrementViews = function() {
+    this.views += 1;
+    this.lastViewed = new Date();
+    return this.save();
+};
+capsuleSchema.statics.findReadyForDelivery = function() {
+    return this.find({
+        status: 'pending',
+        scheduleDate: { $lte: new Date() }
+    });
+};
+capsuleSchema.statics.findNeedingReminders = function() {
+    const now = new Date();
+    return this.find({
+        status: 'pending',
+        'reminder.enabled': true,
+        'reminder.sent': false,
+        scheduleDate: { $gt: now }
+    }).populate('creator');
+};
+module.exports = mongoose.model('Capsule', capsuleSchema);

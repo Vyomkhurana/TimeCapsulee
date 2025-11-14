@@ -62,11 +62,64 @@ const navbar=document.getElementById('navbar');let lastScrollY=window.scrollY,ti
 const updateNavbar=()=>{const y=window.scrollY;y>50?navbar?.classList.add('scrolled'):navbar?.classList.remove('scrolled');y>lastScrollY&&y>100?navbar&&(navbar.style.transform='translateY(-100%)'):navbar&&(navbar.style.transform='translateY(0)');lastScrollY=y;ticking=false};
 window.addEventListener('scroll',()=>{ticking||(window.requestAnimationFrame(updateNavbar),ticking=true)});
 
-const fadeInObserver=new IntersectionObserver(e=>{e.forEach(t=>{t.isIntersecting&&t.target.classList.add('visible')})},{threshold:.1,rootMargin:'0px 0px -50px 0px'});
-document.querySelectorAll('.feature-card,.step,.testimonial-card,.stat').forEach(e=>{e.style.opacity='0';e.style.transform='translateY(30px)';e.style.transition='opacity .6s ease,transform .6s ease';fadeInObserver.observe(e)});
+const fadeInObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+            setTimeout(() => {
+                entry.target.classList.add('visible');
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }, index * 100);
+            fadeInObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
-document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',function(e){e.preventDefault();const t=document.querySelector(this.getAttribute('href'));t&&t.scrollIntoView({behavior:'smooth',block:'start'})})});
-document.querySelectorAll('.btn,.feature-card,.capsule-card').forEach(e=>{e.style.transition='transform .3s ease,box-shadow .3s ease';e.addEventListener('mouseenter',function(){this.style.transform='translateY(-5px) scale(1.02)'});e.addEventListener('mouseleave',function(){this.style.transform='translateY(0) scale(1)'})});
+document.querySelectorAll('.feature-card,.step,.testimonial-card,.stat').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    fadeInObserver.observe(el);
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            const offset = 80;
+            const targetPosition = target.offsetTop - offset;
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        }
+    });
+});
+
+document.querySelectorAll('.btn,.feature-card,.capsule-card').forEach(el => {
+    el.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease';
+    
+    el.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+        if (this.classList.contains('feature-card')) {
+            this.style.boxShadow = '0 20px 40px rgba(99, 102, 241, 0.2)';
+        }
+    });
+    
+    el.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+        this.style.boxShadow = '';
+    });
+    
+    el.addEventListener('mousedown', function() {
+        this.style.transform = 'translateY(-3px) scale(0.98)';
+    });
+    
+    el.addEventListener('mouseup', function() {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+    });
+});
 
 const mobileMenuToggle=document.getElementById('mobileMenuToggle'),navLinksContainer=document.querySelector('.nav-links');
 mobileMenuToggle&&mobileMenuToggle.addEventListener('click',()=>{navLinksContainer?.classList.toggle('active');mobileMenuToggle.classList.toggle('active');const i=mobileMenuToggle.querySelector('i');i&&(i.classList.toggle('fa-bars'),i.classList.toggle('fa-times'))});
@@ -161,6 +214,76 @@ document.addEventListener('DOMContentLoaded', () => {
     prefersDark.addEventListener('change', (e) => {
         document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
     });
+
+    const cursor = document.createElement('div');
+    cursor.className = 'custom-cursor';
+    cursor.style.cssText = `
+        position: fixed;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #6366f1;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 10000;
+        transition: transform 0.15s ease, opacity 0.15s ease;
+        opacity: 0;
+        mix-blend-mode: difference;
+    `;
+    document.body.appendChild(cursor);
+
+    let cursorX = 0, cursorY = 0;
+    let mouseX = 0, mouseY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.style.opacity = '1';
+    });
+
+    document.addEventListener('mouseleave', () => {
+        cursor.style.opacity = '0';
+    });
+
+    function updateCursor() {
+        cursorX += (mouseX - cursorX) * 0.15;
+        cursorY += (mouseY - cursorY) * 0.15;
+        cursor.style.left = cursorX + 'px';
+        cursor.style.top = cursorY + 'px';
+        requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+
+    document.querySelectorAll('.btn, a, button').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            cursor.style.transform = 'scale(1.5)';
+            cursor.style.borderColor = '#ec4899';
+        });
+        el.addEventListener('mouseleave', () => {
+            cursor.style.transform = 'scale(1)';
+            cursor.style.borderColor = '#6366f1';
+        });
+    });
+
+    let scrollProgress = 0;
+    const progressBar = document.createElement('div');
+    progressBar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #6366f1, #ec4899);
+        width: 0%;
+        z-index: 9999;
+        transition: width 0.1s ease;
+    `;
+    document.body.appendChild(progressBar);
+
+    window.addEventListener('scroll', () => {
+        const winScroll = document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        scrollProgress = (winScroll / height) * 100;
+        progressBar.style.width = scrollProgress + '%';
+    }, { passive: true });
 });
 
 window.addEventListener('resize',()=>{window.innerWidth>768&&navLinksContainer?.classList.contains('active')&&(navLinksContainer.classList.remove('active'),mobileMenuToggle?.classList.remove('active'))});

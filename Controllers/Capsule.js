@@ -147,31 +147,66 @@ const getMyCapsules = async (req, res) => {
             return res.status(400).json({ success: false, error: 'User ID is required' });
         }
 
-        const { status, category, limit = 50, skip = 0 } = req.query;
+        const { 
+            status, 
+            category, 
+            limit = 50, 
+            skip = 0, 
+            sortBy = 'scheduleDate',
+            sortOrder = 'asc',
+            search 
+        } = req.query;
+        
         const query = { creator: userId };
         
-        if (status) query.status = status;
-        if (category) query.category = category;
+        if (status && status !== 'all') query.status = status;
+        if (category && category !== 'all') query.category = category;
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
 
-        const [capsules, total] = await Promise.all([
+        const sortOptions = {};
+        sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        const parsedLimit = Math.min(parseInt(limit) || 50, 100);
+        const parsedSkip = Math.max(parseInt(skip) || 0, 0);
+
+        const [capsules, total, statusCounts] = await Promise.all([
             Capsule.find(query)
                 .select('-__v')
-                .sort({ scheduleDate: 1 })
-                .limit(parseInt(limit))
-                .skip(parseInt(skip))
+                .sort(sortOptions)
+                .limit(parsedLimit)
+                .skip(parsedSkip)
                 .lean(),
-            Capsule.countDocuments(query)
+            Capsule.countDocuments(query),
+            Capsule.aggregate([
+                { $match: { creator: mongoose.Types.ObjectId(userId) } },
+                { $group: { _id: '$status', count: { $sum: 1 } } }
+            ])
         ]);
 
+        const statusCountsMap = statusCounts.reduce((acc, item) => {
+            acc[item._id] = item.count;
+            return acc;
+        }, {});
+
+        res.set('Cache-Control', 'private, max-age=60');
         res.json({
             success: true,
             capsules,
             pagination: {
                 total,
-                limit: parseInt(limit),
-                skip: parseInt(skip),
-                hasMore: total > parseInt(skip) + capsules.length
-            }
+                limit: parsedLimit,
+                skip: parsedSkip,
+                hasMore: total > parsedSkip + capsules.length,
+                page: Math.floor(parsedSkip / parsedLimit) + 1,
+                totalPages: Math.ceil(total / parsedLimit)
+            },
+            statusCounts: statusCountsMap,
+            filters: { status, category, search }
         });
     } catch (error) {
         console.error('Get capsules error:', error.message);
@@ -192,43 +227,105 @@ const getCapsule = async (req, res) => {
         }).select('-__v').lean();
 
         if (!capsule) {
-            return res.status(404).json({ success: false, error: 'Capsule not found' });
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Capsule not found or access denied' 
+            });
         }
 
-        res.json({ success: true, capsule });
+        await Capsule.findByIdAndUpdate(id, {
+            $inc: { views: 1 },
+            lastViewed: new Date()
+        });
+
+        const enrichedCapsule = {
+            ...capsule,
+            daysUntilOpen: Math.ceil((new Date(capsule.scheduleDate) - new Date()) / (1000 * 60 * 60 * 24)),
+            isLocked: new Date(capsule.scheduleDate) > new Date(),
+            fileCount: capsule.files?.length || 0
+        };
+
+        res.set('Cache-Control', 'private, max-age=300');
+        res.json({ 
+            success: true, 
+            capsule: enrichedCapsule 
+        });
     } catch (err) {
         console.error('Get capsule error:', err.message);
-        res.status(500).json({ success: false, error: 'Failed to fetch capsule' });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch capsule details' 
+        });
     }
 };
 const deleteCapsule = async (req, res) => {
     try {
         const capsuleId = req.params.id;
-        const capsule = await Capsule.findById(capsuleId);
-        if (!capsule) {
-            return res.status(404).json({ error: 'Capsule not found' });
+        
+        if (!mongoose.Types.ObjectId.isValid(capsuleId)) {
+            return res.status(400).json({ success: false, error: 'Invalid capsule ID' });
         }
-        await Capsule.findByIdAndDelete(capsuleId);
+
+        const capsule = await Capsule.findOne({
+            _id: capsuleId,
+            creator: req.user?._id
+        });
+
+        if (!capsule) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Capsule not found or you do not have permission to delete it' 
+            });
+        }
+
         if (capsule.files && capsule.files.length > 0) {
             const fs = require('fs').promises;
             const path = require('path');
-            for (const file of capsule.files) {
+            
+            const deletePromises = capsule.files.map(async (file) => {
                 try {
                     const filePath = path.join(__dirname, '../public', file.path);
                     await fs.unlink(filePath);
+                    return { success: true, file: file.filename };
                 } catch (err) {
-                    console.error('Error deleting file:', err);
+                    console.error('Error deleting file:', file.filename, err.message);
+                    return { success: false, file: file.filename, error: err.message };
                 }
-            }
+            });
+
+            await Promise.allSettled(deletePromises);
         }
+
+        await Capsule.findByIdAndDelete(capsuleId);
+
+        await logActivity({
+            userId: req.user._id,
+            action: 'capsule_deleted',
+            entityType: 'capsule',
+            entityId: capsule._id,
+            details: { 
+                title: capsule.title, 
+                category: capsule.category,
+                fileCount: capsule.files?.length || 0 
+            },
+            req
+        });
+
         res.json({ 
             success: true, 
-            message: 'Capsule deleted successfully',
-            deletedCapsule: capsule 
+            message: 'Time capsule deleted successfully',
+            deletedCapsule: {
+                _id: capsule._id,
+                title: capsule.title,
+                category: capsule.category
+            }
         });
     } catch (error) {
-        console.error('Delete capsule error:', error);
-        res.status(500).json({ error: 'Failed to delete capsule' });
+        console.error('Delete capsule error:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to delete capsule. Please try again.' 
+        });
     }
 };
 const getStatistics = async (req, res) => {

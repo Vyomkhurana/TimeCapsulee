@@ -41,19 +41,41 @@ app.use((req, res, next) => {
     next();
 });
 app.use(logger(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-app.use(express.json({ limit: '10mb' })); 
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      res.status(400).json({ success: false, error: 'Invalid JSON payload' });
+      throw new Error('Invalid JSON');
+    }
+  }
+})); 
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser());
 app.use(sanitizeInput);
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
-  etag: true
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (filePath.match(/\.(js|css)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    } else if (filePath.match(/\.(jpg|jpeg|png|gif|svg|ico|webp)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    }
+  }
 }));
 app.use('/users', usersRouter);
 app.use('/api/capsules', capsuleRouter);
 app.get('/health', (req, res) => {
   const dbStatus = db.isConnected() ? 'connected' : 'disconnected';
   const memUsage = process.memoryUsage();
+  const cpuUsage = process.cpuUsage();
+  
   res.status(200).json({ 
     status: 'ok',
     database: dbStatus,
@@ -62,10 +84,16 @@ app.get('/health', (req, res) => {
     memory: {
       heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
       heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
-      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`
+      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+      external: `${Math.round(memUsage.external / 1024 / 1024)}MB`
     },
-    version: '3.1.0',
-    nodeVersion: process.version
+    cpu: {
+      user: `${Math.round(cpuUsage.user / 1000)}ms`,
+      system: `${Math.round(cpuUsage.system / 1000)}ms`
+    },
+    version: '3.2.0',
+    nodeVersion: process.version,
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 app.get('/api', (req, res) => {
