@@ -71,30 +71,49 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 app.use('/users', usersRouter);
 app.use('/api/capsules', capsuleRouter);
-app.get('/health', (req, res) => {
-  const dbStatus = db.isConnected() ? 'connected' : 'disconnected';
-  const memUsage = process.memoryUsage();
-  const cpuUsage = process.cpuUsage();
-  
-  res.status(200).json({ 
-    status: 'ok',
-    database: dbStatus,
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    memory: {
-      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
-      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
-      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
-      external: `${Math.round(memUsage.external / 1024 / 1024)}MB`
-    },
-    cpu: {
-      user: `${Math.round(cpuUsage.user / 1000)}ms`,
-      system: `${Math.round(cpuUsage.system / 1000)}ms`
-    },
-    version: '3.2.0',
-    nodeVersion: process.version,
-    environment: process.env.NODE_ENV || 'development'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const memUsage = process.memoryUsage();
+    const dbHealth = await db.healthCheck();
+    const dbStats = db.getConnectionStats();
+    
+    const health = {
+      status: dbHealth.healthy ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      uptime: {
+        seconds: Math.floor(process.uptime()),
+        formatted: `${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`
+      },
+      database: {
+        status: dbHealth.healthy ? 'connected' : 'disconnected',
+        ...dbStats
+      },
+      memory: {
+        heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+        rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+        external: `${Math.round(memUsage.external / 1024 / 1024)}MB`,
+        percentUsed: `${Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100)}%`
+      },
+      system: {
+        platform: process.platform,
+        arch: process.arch,
+        nodeVersion: process.version,
+        pid: process.pid
+      },
+      version: '3.2.0',
+      environment: process.env.NODE_ENV || 'development'
+    };
+    
+    const statusCode = dbHealth.healthy ? 200 : 503;
+    res.status(statusCode).json(health);
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 app.get('/api', (req, res) => {
   res.json({

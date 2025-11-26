@@ -70,6 +70,15 @@ const capsuleSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
+    uniqueViews: {
+        type: Number,
+        default: 0
+    },
+    viewHistory: [{
+        viewedAt: { type: Date, default: Date.now },
+        ip: String,
+        userAgent: String
+    }],
     lastViewed: {
         type: Date,
         index: true
@@ -79,10 +88,28 @@ const capsuleSchema = new mongoose.Schema({
         default: false,
         index: true
     },
+    deliveredAt: {
+        type: Date,
+        index: true
+    },
+    retryCount: {
+        type: Number,
+        default: 0
+    },
+    lastRetry: {
+        type: Date
+    },
+    analytics: {
+        openRate: { type: Number, default: 0 },
+        shareCount: { type: Number, default: 0 },
+        downloadCount: { type: Number, default: 0 }
+    },
     metadata: {
         deviceType: String,
         browser: String,
-        location: String
+        location: String,
+        ipAddress: String,
+        created: { type: Date, default: Date.now }
     },
     files: [{
         filename: String,

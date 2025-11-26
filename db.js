@@ -3,12 +3,20 @@ const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/timecapsu
 const RETRY_BASE_MS = parseInt(process.env.MONGO_RETRY_BASE_MS, 10) || 2000;
 const RETRY_MAX_MS = parseInt(process.env.MONGO_RETRY_MAX_MS, 10) || 5 * 60 * 1000;
 const options = {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 50,
+    minPoolSize: 5,
+    maxIdleTimeMS: 30000,
+    serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
+    heartbeatFrequencyMS: 10000,
     family: 4,
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    retryWrites: true,
+    retryReads: true,
+    compressors: ['zlib'],
+    zlibCompressionLevel: 6
 };
 mongoose.set('strictQuery', false);
 let connectAttempt = 0;
@@ -51,9 +59,36 @@ process.on('SIGTERM', () => gracefulClose('SIGTERM'));
 // Start initial connection attempt
 connectWithRetry();
 
+const getConnectionStats = () => {
+    const conn = mongoose.connection;
+    return {
+        status: conn.readyState === 1 ? 'connected' : 'disconnected',
+        readyState: conn.readyState,
+        host: conn.host,
+        port: conn.port,
+        name: conn.name,
+        models: Object.keys(conn.models).length,
+        collections: Object.keys(conn.collections).length
+    };
+};
+
+const healthCheck = async () => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            return { healthy: false, error: 'Not connected' };
+        }
+        await mongoose.connection.db.admin().ping();
+        return { healthy: true, stats: getConnectionStats() };
+    } catch (error) {
+        return { healthy: false, error: error.message };
+    }
+};
+
 module.exports = {
     mongoose,
     isConnected: () => mongoose.connection.readyState === 1,
     closeConnection: () => mongoose.connection.close(),
-    connectWithRetry
+    connectWithRetry,
+    getConnectionStats,
+    healthCheck
 };
