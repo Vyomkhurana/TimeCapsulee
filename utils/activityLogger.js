@@ -1,1 +1,76 @@
-const ActivityLog = require('../Models/ActivityLog');const logActivity = async (options) => {    try {        const { userId, action, entityType, entityId, details, req } = options;        const log = {            user: userId,            action,            entityType: entityType || 'capsule',            entityId,            details: details || {},            ipAddress: req ? (req.ip || req.connection.remoteAddress) : null,            userAgent: req ? req.headers['user-agent'] : null        };        await ActivityLog.create(log);    } catch (error) {        console.error('Error logging activity:', error);    }};const getUserActivity = async (userId, options = {}) => {    const {        limit = 50,        skip = 0,        action,        startDate,        endDate    } = options;    const query = { user: userId };    if (action) {        query.action = action;    }    if (startDate || endDate) {        query.timestamp = {};        if (startDate) query.timestamp.$gte = new Date(startDate);        if (endDate) query.timestamp.$lte = new Date(endDate);    }    return await ActivityLog.find(query)        .sort({ timestamp: -1 })        .limit(limit)        .skip(skip)        .populate('entityId')        .lean();};const getActivityStats = async (userId, days = 30) => {    const startDate = new Date();    startDate.setDate(startDate.getDate() - days);    const stats = await ActivityLog.aggregate([        {            $match: {                user: new mongoose.Types.ObjectId(userId),                timestamp: { $gte: startDate }            }        },        {            $group: {                _id: '$action',                count: { $sum: 1 }            }        },        {            $sort: { count: -1 }        }    ]);    return stats;};module.exports = {    logActivity,    getUserActivity,    getActivityStats};
+const ActivityLog = require('../Models/ActivityLog');
+const logActivity = async (options) => {
+    try {
+        const { userId, action, entityType, entityId, details, req } = options;
+        
+        // Validate required fields
+        if (!userId || !action) {
+            console.warn('Activity log missing required fields:', { userId, action });
+            return;
+        }
+        
+        const log = {
+            user: userId,
+            action,
+            entityType: entityType || 'capsule',
+            entityId,
+            details: details || {},
+            ipAddress: req ? (req.ip || req.connection.remoteAddress) : null,
+            userAgent: req ? req.headers['user-agent'] : null
+        };
+        await ActivityLog.create(log);
+    } catch (error) {
+        console.error('Error logging activity:', error.message, error.stack);
+    }
+};
+const getUserActivity = async (userId, options = {}) => {
+    const {
+        limit = 50,
+        skip = 0,
+        action,
+        startDate,
+        endDate
+    } = options;
+    const query = { user: userId };
+    if (action) {
+        query.action = action;
+    }
+    if (startDate || endDate) {
+        query.timestamp = {};
+        if (startDate) query.timestamp.$gte = new Date(startDate);
+        if (endDate) query.timestamp.$lte = new Date(endDate);
+    }
+    return await ActivityLog.find(query)
+        .sort({ timestamp: -1 })
+        .limit(limit)
+        .skip(skip)
+        .populate('entityId')
+        .lean();
+};
+const getActivityStats = async (userId, days = 30) => {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const stats = await ActivityLog.aggregate([
+        {
+            $match: {
+                user: new mongoose.Types.ObjectId(userId),
+                timestamp: { $gte: startDate }
+            }
+        },
+        {
+            $group: {
+                _id: '$action',
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { count: -1 }
+        }
+    ]);
+    return stats;
+};
+module.exports = {
+    logActivity,
+    getUserActivity,
+    getActivityStats
+};

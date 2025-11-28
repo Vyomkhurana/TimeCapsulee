@@ -2,6 +2,10 @@ const validateCapsule = (req, res, next) => {
     const { title, message, scheduleDate, category, tags, priority } = req.body;
     const errors = [];
     
+    // Sanitize inputs to prevent XSS
+    if (title) req.body.title = title.trim();
+    if (message) req.body.message = message.trim();
+    
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
         errors.push({ field: 'title', message: 'Title is required and must be a non-empty string' });
     } else if (title.trim().length < 3) {

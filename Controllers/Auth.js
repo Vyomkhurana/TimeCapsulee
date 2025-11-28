@@ -7,6 +7,7 @@ const { sendPasswordResetEmail } = require('../services/emailService');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const TOKEN_EXPIRY = '7d';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const REFRESH_TOKEN_EXPIRY = '30d';
 
 const auth = async (req, res, next) => {
     try {
@@ -35,12 +36,14 @@ const auth = async (req, res, next) => {
     } catch (err) {
         console.error('Auth error:', err.message);
         if (err.name === 'JsonWebTokenError') {
+            res.clearCookie('token');
             return res.status(401).json({ success: false, error: 'Invalid token' });
         }
         if (err.name === 'TokenExpiredError') {
             res.clearCookie('token');
             return res.status(401).json({ success: false, error: 'Token expired' });
         }
+        res.clearCookie('token');
         res.status(500).json({ success: false, error: 'Authentication failed' });
     }
 };

@@ -8,6 +8,9 @@ const Template = require('../Models/Template');
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILES = 5;
 const ALLOWED_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'mp4', 'mp3'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'video/mp4', 'audio/mpeg'];
+const MIN_TITLE_LENGTH = 3;
+const MAX_TITLE_LENGTH = 100;
 
 const storage = multer.diskStorage({
     destination: './public/uploads/',
@@ -23,7 +26,8 @@ const upload = multer({
     limits: { fileSize: MAX_FILE_SIZE },
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase().substring(1);
-        if (ALLOWED_TYPES.includes(ext)) {
+        const mimeType = file.mimetype;
+        if (ALLOWED_TYPES.includes(ext) && ALLOWED_MIME_TYPES.includes(mimeType)) {
             return cb(null, true);
         }
         cb(new Error(`Invalid file type. Allowed: ${ALLOWED_TYPES.join(', ')}`));
@@ -45,6 +49,13 @@ const createCapsule = async (req, res) => {
                 return res.status(400).json({
                     success: false,
                     error: 'Title, message, schedule date, and creator are required'
+                });
+            }
+
+            if (title.trim().length < MIN_TITLE_LENGTH || title.trim().length > MAX_TITLE_LENGTH) {
+                return res.status(400).json({
+                    success: false,
+                    error: `Title must be between ${MIN_TITLE_LENGTH} and ${MAX_TITLE_LENGTH} characters`
                 });
             }
 
