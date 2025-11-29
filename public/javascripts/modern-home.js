@@ -1,5 +1,18 @@
 ﻿document.documentElement.style.scrollBehavior = 'smooth';
 
+// Debounce function for performance optimization
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 function createParticles() {
     const particlesContainer = document.getElementById('particles');
     if (!particlesContainer) return;
@@ -60,7 +73,21 @@ document.head.appendChild(style);
 
 const navbar=document.getElementById('navbar');let lastScrollY=window.scrollY,ticking=false;
 const updateNavbar=()=>{const y=window.scrollY;y>50?navbar?.classList.add('scrolled'):navbar?.classList.remove('scrolled');y>lastScrollY&&y>100?navbar&&(navbar.style.transform='translateY(-100%)'):navbar&&(navbar.style.transform='translateY(0)');lastScrollY=y;ticking=false};
-window.addEventListener('scroll',()=>{ticking||(window.requestAnimationFrame(updateNavbar),ticking=true)});
+window.addEventListener('scroll',()=>{ticking||(window.requestAnimationFrame(updateNavbar),ticking=true)}, { passive: true });
+
+// Add window resize handler with debouncing
+window.addEventListener('resize', debounce(() => {
+    // Re-optimize particles on resize
+    const particlesContainer = document.getElementById('particles');
+    if (particlesContainer && window.innerWidth < 768) {
+        const particles = particlesContainer.querySelectorAll('.particle');
+        if (particles.length > 25) {
+            for (let i = 25; i < particles.length; i++) {
+                particles[i].remove();
+            }
+        }
+    }
+}, 250), { passive: true });
 
 const fadeInObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry, index) => {

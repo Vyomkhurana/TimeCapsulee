@@ -13,6 +13,7 @@
     --gray: #64748b;
     --gray-light: #e2e8f0;
     --white: #ffffff;
+    --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.2);
     --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
@@ -47,6 +48,18 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     position: relative;
+}
+
+/* Improved focus styles for accessibility */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    box-shadow: var(--focus-ring);
+}
+
+/* Remove outline for mouse users */
+:focus:not(:focus-visible) {
+    outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
