@@ -16,6 +16,12 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ success: false, error: 'Authentication required' });
         }
 
+        // Validate token format before verification
+        if (typeof token !== 'string' || token.length < 10) {
+            res.clearCookie('token');
+            return res.status(401).json({ success: false, error: 'Invalid token format' });
+        }
+
         const decoded = jwt.verify(token, JWT_SECRET);
         const [session, user] = await Promise.all([
             Session.findOne({ token }).lean(),
