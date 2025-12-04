@@ -19,6 +19,7 @@ const exponentialDelay = (retryCount) => {
 };
 
 const processCapsuleWithRetry = async (capsule, retryCount = 0) => {
+    const startTime = Date.now();
     try {
         const emailTemplate = getDeliveryEmailTemplate(capsule, capsule.creator);
         await sendEmail({
@@ -40,9 +41,13 @@ const processCapsuleWithRetry = async (capsule, retryCount = 0) => {
             action: 'capsule_delivered',
             entityType: 'capsule',
             entityId: capsule._id,
-            details: { title: capsule.title },
+            details: { 
+                title: capsule.title,
+                processingTime: Date.now() - startTime
+            },
         });
 
+        console.log(`✓ Capsule ${capsule._id} delivered in ${Date.now() - startTime}ms`);
         return { success: true, capsuleId: capsule._id };
     } catch (error) {
         const nextRetry = retryCount + 1;

@@ -17,6 +17,8 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
         const ext = path.extname(file.originalname);
+        // Sanitize filename to prevent path traversal attacks
+        const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
         cb(null, `${uniqueSuffix}${ext}`);
     }
 });
@@ -65,14 +67,16 @@ const createCapsule = async (req, res) => {
             if (isNaN(scheduleDateObj.getTime())) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Invalid schedule date format'
+                    error: 'Invalid schedule date format. Please use ISO 8601 format'
                 });
             }
 
-            if (scheduleDateObj <= now) {
+            // Add 1 minute buffer to account for processing time
+            const minFutureDate = new Date(now.getTime() + 60000);
+            if (scheduleDateObj <= minFutureDate) {
                 return res.status(400).json({
                     success: false,
-                    error: 'Schedule date must be in the future'
+                    error: 'Schedule date must be at least 1 minute in the future'
                 });
             }
 

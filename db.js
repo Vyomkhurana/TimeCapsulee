@@ -35,8 +35,9 @@ const connectWithRetry = async () => {
 };
 mongoose.connection.on('connected', () => {
     console.log('Mongoose connected to MongoDB');
+    console.log(`Connection pool: min=${options.minPoolSize}, max=${options.maxPoolSize}`);
 });
-mongoose.connection.on('error', (err) => {
+mongose.connection.on('error', (err) => {
     console.error('Mongoose connection error:', err && err.message ? err.message : err);
 });
 mongoose.connection.on('disconnected', () => {
