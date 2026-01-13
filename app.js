@@ -13,7 +13,28 @@ const usersRouter = require('./routes/users');
 const { rateLimiter } = require('./middleware/rateLimiter');
 const { sanitizeInput } = require('./middleware/validation');
 const app = express();
+
 app.set('trust proxy', 1);
+
+app.use((req, res, next) => {
+    req.id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    req.startTime = Date.now();
+    res.setHeader('X-Request-ID', req.id);
+    next();
+});
+
+app.use((req, res, next) => {
+    const originalSend = res.send;
+    res.send = function(data) {
+        res.responseTime = Date.now() - req.startTime;
+        if (res.responseTime > 1000) {
+            console.warn(`[Performance] Slow request: ${req.method} ${req.path} - ${res.responseTime}ms`);
+        }
+        return originalSend.call(this, data);
+    };
+    next();
+});
+
 app.use(rateLimiter({
     max: process.env.RATE_LIMIT_MAX || 100,
     windowMs: 15 * 60 * 1000,
@@ -118,14 +139,16 @@ app.get('/health', async (req, res) => {
 app.get('/api', (req, res) => {
   res.json({
     name: 'Time Capsule API',
-    version: '3.1.0',
+    version: '3.2.0',
+    apiVersion: 'v1',
     description: 'Digital time capsule application with advanced features',
     documentation: '/api/docs',
     endpoints: {
       capsules: '/api/capsules',
       users: '/users',
       health: '/health',
-      templates: '/api/templates'
+      templates: '/api/templates',
+      analytics: '/api/analytics'
     },
     features: [
       'Advanced search & filtering',
@@ -138,11 +161,14 @@ app.get('/api', (req, res) => {
       'Rate limiting & security',
       'Input validation & sanitization',
       'File uploads with compression',
-      'Email notifications',
-      'Template system'
+      'Email notifications with queue',
+      'Template system',
+      'Two-factor authentication',
+      'Account tiers & storage limits'
     ],
     status: 'active',
-    lastUpdated: '2025-11-12'
+    uptime: Math.floor(process.uptime()),
+    lastUpdated: '2026-01-13'
   });
 });
 const htmlPages = [
@@ -226,8 +252,27 @@ app.use((err, req, res, next) => {
     `);
   }
 });
+
+const logger = require('./utils/logger');
+const { ensureIndexes } = require('./utils/dbOptimizer');
+
+logger.info('🚀 Starting TimeCapsule API server...');
 console.log('🚀 Starting scheduler...');
 startScheduler();
+
+if (db.isConnected()) {
+    logger.info('✅ MongoDB connected - initializing indexes...');
+    ensureIndexes().then(result => {
+        if (result.success) {
+            logger.info('✅ Database indexes initialized');
+        } else {
+            logger.warn('⚠️ Index initialization failed', { error: result.error });
+        }
+    });
+} else {
+    logger.warn('⚠️ MongoDB not connected yet - indexes will be created on connection');
+}
+
 try {
   const connected = typeof db.isConnected === 'function' ? db.isConnected() : false;
   console.log(`MongoDB connected: ${connected}`);

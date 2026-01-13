@@ -68,11 +68,38 @@ const userSchema = new mongoose.Schema({
     lockUntil: {
         type: Date
     },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false
+    },
+    twoFactorSecret: {
+        type: String,
+        select: false
+    },
+    backupCodes: {
+        type: [String],
+        select: false,
+        default: []
+    },
     profileCompletion: {
         type: Number,
         default: 60,
         min: 0,
         max: 100
+    },
+    accountTier: {
+        type: String,
+        enum: ['free', 'premium', 'enterprise'],
+        default: 'free',
+        index: true
+    },
+    storageUsed: {
+        type: Number,
+        default: 0
+    },
+    storageLimit: {
+        type: Number,
+        default: 100 * 1024 * 1024
     },
     preferences: {
         emailNotifications: { type: Boolean, default: true },

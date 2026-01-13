@@ -159,7 +159,19 @@ const getMyCapsules = async (req, res) => {
         const userId = req.query.userId || req.user?._id;
         
         if (!userId) {
-            return res.status(400).json({ success: false, error: 'User ID is required' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Authentication required',
+                code: 'AUTH_REQUIRED'
+            });
+        }
+        
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid user ID format',
+                code: 'INVALID_USER_ID'
+            });
         }
 
         const { 
@@ -224,8 +236,18 @@ const getMyCapsules = async (req, res) => {
             filters: { status, category, search }
         });
     } catch (error) {
-        console.error('Get capsules error:', error.message);
-        res.status(500).json({ success: false, error: 'Failed to fetch capsules' });
+        console.error('[Capsule] Get capsules error:', {
+            message: error.message,
+            stack: error.stack,
+            userId: req.user?._id || req.query.userId,
+            query: req.query
+        });
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch capsules',
+            code: 'FETCH_ERROR',
+            ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        });
     }
 };
 const getCapsule = async (req, res) => {

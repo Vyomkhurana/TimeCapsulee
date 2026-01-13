@@ -80,7 +80,18 @@ const processCapsuleWithRetry = async (capsule, retryCount = 0) => {
 
 let scheduledTasks = [];
 
+const isDatabaseReady = () => {
+    try {
+        return db.isConnected && db.isConnected();
+    } catch (err) {
+        console.error('[Scheduler] DB check error:', err.message);
+        return false;
+    }
+};
+
 const startScheduler = () => {
+    console.log('[Scheduler] Starting scheduler service...');
+    
     // Delivery task: runs every minute
     const deliveryTask = cron.schedule('* * * * *', async () => {
         if (!db.isConnected()) {

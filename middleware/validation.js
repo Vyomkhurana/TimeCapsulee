@@ -2,12 +2,16 @@ const validateCapsule = (req, res, next) => {
     const { title, message, scheduleDate, category, tags, priority } = req.body;
     const errors = [];
     
-    // Sanitize inputs to prevent XSS
+    const containsHTML = (str) => /<[^>]*>/g.test(str);
+    const containsScripts = (str) => /<script[^>]*>.*?<\/script>/gi.test(str);
+    
     if (title) req.body.title = title.trim();
     if (message) req.body.message = message.trim();
     
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
         errors.push({ field: 'title', message: 'Title is required and must be a non-empty string' });
+    } else if (containsScripts(title)) {
+        errors.push({ field: 'title', message: 'Title contains invalid content' });
     } else if (title.trim().length < 3) {
         errors.push({ field: 'title', message: 'Title must be at least 3 characters long' });
     } else if (title.length > 200) {
@@ -16,6 +20,8 @@ const validateCapsule = (req, res, next) => {
     
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
         errors.push({ field: 'message', message: 'Message is required and must be a non-empty string' });
+    } else if (containsScripts(message)) {
+        errors.push({ field: 'message', message: 'Message contains invalid content' });
     } else if (message.trim().length < 10) {
         errors.push({ field: 'message', message: 'Message must be at least 10 characters long' });
     } else if (message.length > 5000) {
