@@ -2,6 +2,13 @@
 
 All notable changes to the Time Capsule project will be documented in this file.
 
+## [3.2.1] - 2026-01-20
+
+### 🔧 Improvements
+- Updated version numbers across application
+- Enhanced version tracking consistency
+- Improved API documentation accuracy
+
 ## [2.0.0] - 2025-10-28
 
 ### 🎉 Major Release - Powerful New Features!

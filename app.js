@@ -122,7 +122,7 @@ app.get('/health', async (req, res) => {
         nodeVersion: process.version,
         pid: process.pid
       },
-      version: '3.2.0',
+      version: '3.2.1',
       environment: process.env.NODE_ENV || 'development'
     };
     
@@ -139,7 +139,7 @@ app.get('/health', async (req, res) => {
 app.get('/api', (req, res) => {
   res.json({
     name: 'Time Capsule API',
-    version: '3.2.0',
+    version: '3.2.1',
     apiVersion: 'v1',
     description: 'Digital time capsule application with advanced features',
     documentation: '/api/docs',
@@ -168,7 +168,7 @@ app.get('/api', (req, res) => {
     ],
     status: 'active',
     uptime: Math.floor(process.uptime()),
-    lastUpdated: '2026-01-13'
+    lastUpdated: '2026-01-20'
   });
 });
 const htmlPages = [
