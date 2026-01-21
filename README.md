@@ -2,6 +2,8 @@
 
 A powerful, feature-rich web application that allows users to create digital time capsules and schedule them for future delivery via email. Now with advanced search, sharing, templates, analytics, and much more!
 
+> 🚀 **Latest Update (January 2026)**: Enhanced security features, improved performance, and brand new analytics dashboard!
+
 ## ✨ Core Features
 
 ### 📦 Capsule Management
