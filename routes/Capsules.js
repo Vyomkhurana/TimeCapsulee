@@ -24,7 +24,10 @@ const {
     createTemplate,
     createFromTemplate,
     backupCapsules,
-    getAdvancedAnalytics
+    getAdvancedAnalytics,
+    updatePriority,
+    getHighPriorityCapsules,
+    getPriorityStats
 } = require('../Controllers/Capsule');
 const { validateCapsule } = require('../middleware/validation');
 const { rateLimiter } = require('../middleware/rateLimiter');
@@ -54,4 +57,10 @@ router.post('/templates/create', createTemplate);
 router.post('/templates/use', createFromTemplate);
 router.get('/backup/export', backupCapsules);
 router.get('/analytics/advanced', getAdvancedAnalytics);
+
+// Priority management routes
+router.patch('/:id/priority', updatePriority);
+router.get('/priority/high', getHighPriorityCapsules);
+router.get('/priority/stats', getPriorityStats);
+
 module.exports = router;

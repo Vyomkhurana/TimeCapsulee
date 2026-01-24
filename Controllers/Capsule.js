@@ -1045,6 +1045,129 @@ const getAdvancedAnalytics = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch analytics' });
     }
 };
+
+// Update capsule priority
+const updatePriority = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { priority } = req.body;
+        const userId = req.session.userId;
+
+        // Validate priority
+        const validPriorities = ['low', 'medium', 'high', 'urgent'];
+        if (!priority || !validPriorities.includes(priority)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: `Invalid priority. Must be one of: ${validPriorities.join(', ')}` 
+            });
+        }
+
+        // Find and update capsule
+        const capsule = await Capsule.findOne({ _id: id, creator: userId });
+        if (!capsule) {
+            return res.status(404).json({ success: false, error: 'Capsule not found' });
+        }
+
+        const oldPriority = capsule.priority;
+        capsule.priority = priority;
+        await capsule.save();
+
+        // Log activity
+        await logActivity({
+            userId,
+            action: 'priority_updated',
+            resourceType: 'capsule',
+            resourceId: id,
+            details: { oldPriority, newPriority: priority }
+        });
+
+        res.json({ 
+            success: true, 
+            message: 'Priority updated successfully',
+            priority: capsule.priority 
+        });
+    } catch (error) {
+        console.error('Error updating priority:', error);
+        res.status(500).json({ success: false, error: 'Failed to update priority' });
+    }
+};
+
+// Get high priority capsules (high + urgent)
+const getHighPriorityCapsules = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { limit = 20, status } = req.query;
+
+        const query = {
+            creator: userId,
+            priority: { $in: ['high', 'urgent'] }
+        };
+
+        // Optional status filter
+        if (status && ['pending', 'delivered', 'failed'].includes(status)) {
+            query.status = status;
+        }
+
+        const capsules = await Capsule.find(query)
+            .select('title message category priority status scheduleDate createdAt starred tags')
+            .sort({ priority: -1, scheduleDate: 1 }) // urgent first, then by schedule date
+            .limit(parseInt(limit));
+
+        res.json({
+            success: true,
+            count: capsules.length,
+            capsules
+        });
+    } catch (error) {
+        console.error('Error fetching high priority capsules:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch capsules' });
+    }
+};
+
+// Get priority statistics
+const getPriorityStats = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+
+        const stats = await Capsule.aggregate([
+            { $match: { creator: new mongoose.Types.ObjectId(userId) } },
+            {
+                $group: {
+                    _id: '$priority',
+                    count: { $sum: 1 },
+                    pending: { 
+                        $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } 
+                    },
+                    delivered: { 
+                        $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] } 
+                    },
+                    failed: { 
+                        $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } 
+                    }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        // Get urgent capsules needing attention (pending + high/urgent priority)
+        const urgentNeedingAttention = await Capsule.countDocuments({
+            creator: userId,
+            priority: { $in: ['high', 'urgent'] },
+            status: 'pending',
+            scheduleDate: { $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) } // within 7 days
+        });
+
+        res.json({
+            success: true,
+            stats,
+            urgentNeedingAttention
+        });
+    } catch (error) {
+        console.error('Error fetching priority stats:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch statistics' });
+    }
+};
+
 module.exports = {
     createCapsule,
     getMyCapsules,
@@ -1069,5 +1192,8 @@ module.exports = {
     createTemplate,
     createFromTemplate,
     backupCapsules,
-    getAdvancedAnalytics
+    getAdvancedAnalytics,
+    updatePriority,
+    getHighPriorityCapsules,
+    getPriorityStats
 };

@@ -398,6 +398,109 @@ curl "http://localhost:3000/api/capsules/search/advanced?userId=USER_ID&query=te
 
 ---
 
+## 🎯 Priority Management
+
+### Update Capsule Priority
+```http
+PATCH /api/capsules/:id/priority
+Content-Type: application/json
+
+{
+  "priority": "high"
+}
+```
+
+**Priority Levels:**
+- `low` - Low priority capsules
+- `medium` - Default priority
+- `high` - High priority capsules
+- `urgent` - Urgent capsules needing immediate attention
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Priority updated successfully",
+  "priority": "high"
+}
+```
+
+### Get High Priority Capsules
+Get all high and urgent priority capsules
+
+```http
+GET /api/capsules/priority/high?limit=20&status=pending
+```
+
+**Query Parameters:**
+- `limit` (optional) - Maximum number of results (default: 20)
+- `status` (optional) - Filter by status: pending, delivered, failed
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 5,
+  "capsules": [
+    {
+      "_id": "...",
+      "title": "Important Meeting Notes",
+      "priority": "urgent",
+      "status": "pending",
+      "scheduleDate": "2026-02-15",
+      "category": "business"
+    }
+  ]
+}
+```
+
+### Get Priority Statistics
+Get statistics breakdown by priority level
+
+```http
+GET /api/capsules/priority/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "stats": [
+    {
+      "_id": "low",
+      "count": 15,
+      "pending": 10,
+      "delivered": 5,
+      "failed": 0
+    },
+    {
+      "_id": "medium",
+      "count": 45,
+      "pending": 30,
+      "delivered": 14,
+      "failed": 1
+    },
+    {
+      "_id": "high",
+      "count": 12,
+      "pending": 8,
+      "delivered": 4,
+      "failed": 0
+    },
+    {
+      "_id": "urgent",
+      "count": 3,
+      "pending": 3,
+      "delivered": 0,
+      "failed": 0
+    }
+  ],
+  "urgentNeedingAttention": 5
+}
+```
+
+---
+
 ## 🚀 New Features in v2.0
 
 ✅ Advanced search with multiple filters  
@@ -415,6 +518,7 @@ curl "http://localhost:3000/api/capsules/search/advanced?userId=USER_ID&query=te
 ✅ Rate limiting & security  
 ✅ Input validation & sanitization  
 ✅ Performance optimizations  
+✅ **Priority management system** ⭐ NEW!
 
 ---
 
@@ -423,5 +527,5 @@ For issues or questions, please open an issue on GitHub.
 
 ---
 
-**Version:** 2.0.0  
-**Last Updated:** October 28, 2025
+**Version:** 2.1.0  
+**Last Updated:** January 24, 2026
